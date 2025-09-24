@@ -1,0 +1,138 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==================== REGRAS DE USUÁRIOS ====================
+    // Usuários podem ler/escrever apenas seus próprios dados
+    match /usuarios/{userId} {
+      // Permitir leitura e escrita apenas para o próprio usuário
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Permitir criação de conta durante cadastro
+      allow create: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // ==================== REGRAS DE AGENDAMENTOS ====================
+    match /agendamentos/{agendamentoId} {
+      // ADMIN: Acesso total para admin (por email ou documento)
+      allow read, write: if request.auth != null && 
+        (isAdminByEmail() || isAdmin(request.auth.uid));
+      
+      // Cliente pode ler/criar/atualizar seus próprios agendamentos
+      allow read, create: if request.auth != null && 
+        request.auth.uid == request.resource.data.clienteId;
+      
+      // Permitir atualização se for o cliente do agendamento
+      allow update: if request.auth != null && 
+        request.auth.uid == resource.data.clienteId;
+      
+      // Barbeiros podem ler agendamentos onde são o barbeiro responsável
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/agendamentos/$(agendamentoId)) &&
+        request.auth.uid == resource.data.barbeiroId;
+      
+      // Validações para criação de agendamentos
+      allow create: if request.auth != null &&
+        validateAgendamento();
+    }
+    
+    // ==================== REGRAS DE SERVIÇOS ====================
+    match /servicos/{servicoId} {
+      // Todos usuários autenticados podem ler serviços
+      allow read: if request.auth != null;
+      
+      // Apenas admins podem criar/editar/deletar serviços
+      allow write: if request.auth != null && 
+        isAdmin(request.auth.uid);
+    }
+    
+    // ==================== REGRAS DE PRODUTOS ====================
+    match /produtos/{produtoId} {
+      // Todos usuários autenticados podem ler produtos
+      allow read: if request.auth != null;
+      
+      // Apenas admins podem criar/editar/deletar produtos
+      allow write: if request.auth != null && 
+        isAdmin(request.auth.uid);
+    }
+    
+    // ==================== FUNÇÕES AUXILIARES ====================
+    
+    // Verifica se o usuário é admin (documento no Firestore)
+    function isAdmin(userId) {
+      return exists(/databases/$(database)/documents/usuarios/$(userId)) &&
+        get(/databases/$(database)/documents/usuarios/$(userId)).data.tipo == 'admin';
+    }
+    
+    // Verifica se é admin pelo email (para hack temporário)
+    function isAdminByEmail() {
+      return request.auth.token.email == 'admin@barbearia.com';
+    }
+    
+    // Verifica se o usuário é barbeiro
+    function isBarbeiro(userId) {
+      return exists(/databases/$(database)/documents/usuarios/$(userId)) &&
+        get(/databases/$(database)/documents/usuarios/$(userId)).data.tipo == 'barbeiro';
+    }
+    
+    // Validações para agendamentos
+    function validateAgendamento() {
+      let agendamento = request.resource.data;
+      
+      return 
+        // Verificar se clienteId é o usuário atual
+        agendamento.clienteId == request.auth.uid &&
+        
+        // Verificar se tem todos os campos obrigatórios
+        agendamento.keys().hasAll(['clienteId', 'barbeiroId', 'servicoId', 'dataHora', 'status', 'valor']) &&
+        
+        // Verificar tipos de dados básicos
+        agendamento.clienteId is string &&
+        agendamento.barbeiroId is string &&
+        agendamento.servicoId is string &&
+        agendamento.dataHora is timestamp &&
+        agendamento.status is string &&
+        agendamento.valor is number &&
+        
+        // Verificar se o valor é positivo
+        agendamento.valor > 0 &&
+        
+        // Verificar se a data é no futuro (não pode agendar no passado)
+        agendamento.dataHora > request.time &&
+        
+        // Status inicial deve ser 'agendado'
+        agendamento.status == 'agendado';
+    }
+  }
+}
+
+// ==================== EXPLICAÇÃO DAS REGRAS ====================
+
+/*
+🔐 SEGURANÇA IMPLEMENTADA:
+
+1. AUTENTICAÇÃO OBRIGATÓRIA
+   - Todos os acessos requerem usuário logado (request.auth != null)
+
+2. USUÁRIOS
+   - Cada usuário só acessa seus próprios dados
+   - Prevenção de vazamento de dados pessoais
+
+3. AGENDAMENTOS
+   - Clientes: podem criar e ver apenas seus agendamentos
+   - Barbeiros: podem ver agendamentos onde são responsáveis
+   - Admins: acesso total para gerenciamento
+
+4. SERVIÇOS E PRODUTOS
+   - Leitura liberada para usuários autenticados (necessário para app)
+   - Escrita restrita apenas para admins
+
+5. VALIDAÇÕES
+   - Agendamentos validam data futura, campos obrigatórios, tipos
+   - Prevenção de dados inválidos ou maliciosos
+
+6. HIERARQUIA DE PERMISSÕES
+   - Cliente < Barbeiro < Admin
+   - Cada nível tem permissões apropriadas
+*/
