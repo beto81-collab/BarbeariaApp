@@ -1,1 +1,58 @@
-{"firestore":{"rules":"firestore.rules"},"functions":[{"source":"functions","codebase":"default","ignore":["node_modules",".git","firebase-debug.log","firebase-debug.*.log","*.local"],"predeploy":["npm --prefix \"$RESOURCE_DIR\" run lint"]}],"flutter":{"platforms":{"android":{"default":{"projectId":"corte-real-app","appId":"1:211952550292:android:7404b34f9131c8363acf81","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"corte-real-app","configurations":{"android":"1:211952550292:android:7404b34f9131c8363acf81","ios":"1:211952550292:ios:086ed8f9a702e5e43acf81","macos":"1:211952550292:ios:086ed8f9a702e5e43acf81","web":"1:211952550292:web:716ae76c8b437d5d3acf81","windows":"1:211952550292:web:677e7935588e1d9c3acf81"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ]
+    }
+  ],
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "corte-real-app",
+          "appId": "1:211952550292:android:7404b34f9131c8363acf81",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "corte-real-app",
+          "configurations": {
+            "android": "1:211952550292:android:7404b34f9131c8363acf81",
+            "ios": "1:211952550292:ios:086ed8f9a702e5e43acf81",
+            "macos": "1:211952550292:ios:086ed8f9a702e5e43acf81",
+            "web": "1:211952550292:web:716ae76c8b437d5d3acf81",
+            "windows": "1:211952550292:web:677e7935588e1d9c3acf81"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

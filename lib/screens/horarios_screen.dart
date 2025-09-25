@@ -209,7 +209,8 @@ class _HorariosScreenState extends State<HorariosScreen> {
 class _HoraField extends StatelessWidget {
   final String valor;
   final ValueChanged<String> onChanged;
-  const _HoraField({required this.valor, required this.onChanged});
+  const _HoraField({required this.valor, required this.onChanged, Key? key})
+    : super(key: key);
 
   Future<void> _selecionarHora(BuildContext context) async {
     final partes = valor.split(":");
@@ -222,10 +223,10 @@ class _HoraField extends StatelessWidget {
         data: Theme.of(context).copyWith(
           timePickerTheme: TimePickerThemeData(
             backgroundColor: Colors.white,
-            hourMinuteTextColor: Colors.white, // número selecionado em branco
+            hourMinuteTextColor: Colors.white,
             hourMinuteColor: WidgetStateColor.resolveWith(
               (states) => Colors.amber[700]!,
-            ), // círculo amarelo
+            ),
             hourMinuteShape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),
             ),
@@ -234,9 +235,9 @@ class _HoraField extends StatelessWidget {
             dialBackgroundColor: Colors.amber[50],
             dialTextColor: WidgetStateColor.resolveWith((states) {
               if (states.contains(WidgetState.selected)) {
-                return Colors.white; // número selecionado em branco
+                return Colors.white;
               }
-              return Colors.black; // números do dial em preto
+              return Colors.black;
             }),
             entryModeIconColor: Colors.amber[700],
           ),
@@ -247,6 +248,7 @@ class _HoraField extends StatelessWidget {
     if (selecionada != null) {
       final h = selecionada.hour.toString().padLeft(2, '0');
       final m = selecionada.minute.toString().padLeft(2, '0');
+      // Garante atualização imediata
       onChanged("$h:$m");
     }
   }
@@ -254,19 +256,25 @@ class _HoraField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 110, // largura aumentada para melhor visualização
+      width: 110,
       child: GestureDetector(
         onTap: () => _selecionarHora(context),
         child: AbsorbPointer(
-          child: TextFormField(
-            readOnly: true,
-            initialValue: valor,
-            decoration: const InputDecoration(
-              isDense: true,
-              border: InputBorder.none,
-              suffixIcon: Icon(Icons.access_time, size: 16),
-            ),
-            style: const TextStyle(fontWeight: FontWeight.bold),
+          child: Builder(
+            builder: (context) {
+              // Força rebuild sempre que valor muda
+              return TextFormField(
+                readOnly: true,
+                key: ValueKey(valor),
+                initialValue: valor,
+                decoration: const InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  suffixIcon: Icon(Icons.access_time, size: 16),
+                ),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              );
+            },
           ),
         ),
       ),
