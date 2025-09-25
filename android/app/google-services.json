@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "63227355509",
-    "project_id": "corte-real-4d73b",
-    "storage_bucket": "corte-real-4d73b.firebasestorage.app"
+    "project_number": "211952550292",
+    "project_id": "corte-real-app",
+    "storage_bucket": "corte-real-app.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:63227355509:android:7fb27438b65c56bca6733c",
+        "mobilesdk_app_id": "1:211952550292:android:7404b34f9131c8363acf81",
         "android_client_info": {
           "package_name": "com.example.barbearia_app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBNy2yalqaRA7PzwbPrX-ywe-3JOOb6-lo"
+          "current_key": "AIzaSyD7WtrK1ty_CxjmDccfTipBY0KWJv4iScM"
         }
       ],
       "services": {

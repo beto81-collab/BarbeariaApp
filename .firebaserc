@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "corte-real-4d73b"
-  }
+    "default": "corte-real-app"
+  },
+  "targets": {},
+  "etags": {}
 }
