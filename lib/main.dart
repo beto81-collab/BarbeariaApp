@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'services/firebase_config.dart';
+// import 'services/firebase_config.dart'; // descontinuado - usar DefaultFirebaseOptions
+import 'firebase_options.dart';
 import 'services/firebase_service.dart';
 import 'services/notification_service.dart';
 import 'screens/login_screen.dart';
@@ -13,8 +14,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    // Inicializa o Firebase
-    await Firebase.initializeApp(options: FirebaseConfig.currentPlatform);
+    // Inicializa Firebase usando opções oficiais geradas pelo FlutterFire CLI
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
     // Inicializar serviço de notificações
     await NotificationService.initialize();

@@ -209,8 +209,7 @@ class _HorariosScreenState extends State<HorariosScreen> {
 class _HoraField extends StatelessWidget {
   final String valor;
   final ValueChanged<String> onChanged;
-  const _HoraField({required this.valor, required this.onChanged, Key? key})
-    : super(key: key);
+  const _HoraField({required this.valor, required this.onChanged});
 
   Future<void> _selecionarHora(BuildContext context) async {
     final partes = valor.split(":");

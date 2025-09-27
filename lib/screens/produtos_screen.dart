@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // Para kIsWeb
 import '../models/produto.dart';
 import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+// Para Uint8List
 
 class ProdutosScreen extends StatelessWidget {
   const ProdutosScreen({super.key});
@@ -129,11 +131,13 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
   void _removerImagem() {
     setState(() {
       _imagemFile = null;
+      _imagemBytes = null;
       _fotoUrl = null;
     });
   }
 
   File? _imagemFile;
+  Uint8List? _imagemBytes; // Para armazenar bytes da imagem na web
   String? _fotoUrl;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nomeController;
@@ -182,7 +186,14 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
               Stack(
                 alignment: Alignment.topRight,
                 children: [
-                  if (_imagemFile != null)
+                  if (kIsWeb && _imagemBytes != null)
+                    Image.memory(
+                      _imagemBytes!,
+                      height: 120,
+                      width: 120,
+                      fit: BoxFit.cover,
+                    )
+                  else if (!kIsWeb && _imagemFile != null)
                     Image.file(
                       _imagemFile!,
                       height: 120,
@@ -207,7 +218,8 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
                         color: Colors.grey,
                       ),
                     ),
-                  if (_imagemFile != null ||
+                  if ((kIsWeb && _imagemBytes != null) ||
+                      (!kIsWeb && _imagemFile != null) ||
                       (_fotoUrl != null && _fotoUrl!.isNotEmpty))
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.red),
@@ -274,7 +286,9 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
   }
 
   void _salvarProduto() async {
+    print("Iniciando processo de salvar produto");
     if (_formKey.currentState?.validate() != true) return;
+
     final nome = _nomeController.text.trim();
     final descricao = _descricaoController.text.trim();
     final preco =
@@ -282,9 +296,13 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
     final estoque = int.tryParse(_estoqueController.text) ?? 0;
 
     String fotoUrl = _fotoUrl ?? '';
-    if (_imagemFile != null) {
-      // Upload da imagem para o Firebase Storage
+    // Faz upload da imagem apenas se houver uma nova selecionada
+    if (kIsWeb && _imagemBytes != null) {
+      fotoUrl = await FirebaseService.uploadImagemProdutoBytes(_imagemBytes!);
+      print("Imagem salva com URL: $fotoUrl");
+    } else if (!kIsWeb && _imagemFile != null) {
       fotoUrl = await FirebaseService.uploadImagemProduto(_imagemFile!);
+      print("Imagem salva com URL: $fotoUrl");
     }
 
     if (widget.produto == null) {
@@ -327,10 +345,22 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
       imageQuality: 80,
     );
     if (pickedFile != null) {
-      setState(() {
-        _imagemFile = File(pickedFile.path);
-        _fotoUrl = null;
-      });
+      if (kIsWeb) {
+        // Para web, ler os bytes da imagem
+        final bytes = await pickedFile.readAsBytes();
+        setState(() {
+          _imagemBytes = bytes;
+          _imagemFile = null;
+          _fotoUrl = null;
+        });
+      } else {
+        // Para mobile/desktop, usar File
+        setState(() {
+          _imagemFile = File(pickedFile.path);
+          _imagemBytes = null;
+          _fotoUrl = null;
+        });
+      }
     }
   }
 
@@ -341,10 +371,22 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
       imageQuality: 80,
     );
     if (pickedFile != null) {
-      setState(() {
-        _imagemFile = File(pickedFile.path);
-        _fotoUrl = null;
-      });
+      if (kIsWeb) {
+        // Para web, ler os bytes da imagem
+        final bytes = await pickedFile.readAsBytes();
+        setState(() {
+          _imagemBytes = bytes;
+          _imagemFile = null;
+          _fotoUrl = null;
+        });
+      } else {
+        // Para mobile/desktop, usar File
+        setState(() {
+          _imagemFile = File(pickedFile.path);
+          _imagemBytes = null;
+          _fotoUrl = null;
+        });
+      }
     }
   }
 }

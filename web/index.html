@@ -32,7 +32,8 @@
   <title>barbearia_app</title>
   <link rel="manifest" href="manifest.json">
   
-  <!-- Firebase Configuration -->
+  <!-- Firebase Configuration (DESATIVADO: agora usamos firebase_options.dart) -->
+  <!--
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
     import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
@@ -46,11 +47,11 @@
       messagingSenderId: "211952550292",
       appId: "1:211952550292:android:7404b34f9131c8363acf81"
     };
-    
     window.firebaseApp = initializeApp(firebaseConfig);
     window.firebaseAuth = getAuth(window.firebaseApp);
     window.firebaseFirestore = getFirestore(window.firebaseApp);
   </script>
+  -->
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

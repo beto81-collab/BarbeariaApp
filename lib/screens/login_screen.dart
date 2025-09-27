@@ -4,7 +4,6 @@ import '../widgets/logo_corte_real.dart';
 import '../widgets/interactive_background.dart';
 import '../services/firebase_service.dart';
 import '../services/preferences_service.dart';
-import 'cadastro_screen.dart';
 import 'admin_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -144,200 +143,164 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Form(
               key: _formKey,
               child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.08,
-                  ), // Espaço do topo restaurado
-                  // Logo da barbearia
-                  const LogoCorteReal(size: 120),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.08,
+                    ), // Espaço do topo restaurado
+                    // Logo da barbearia
+                    const LogoCorteReal(size: 120),
 
-                  const SizedBox(height: 20), //altura entre logo e texto
-                  // Título
-                  const Text(
-                    'Sua experiência única',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppTheme.subTextColor,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 80,
-                  ), // Espaço ajustado para centralizar o conjunto
-                  // Campo de email
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'Digite seu email',
-                      prefixIcon: Icon(Icons.email),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor, digite seu email';
-                      }
-                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                        return 'Digite um email válido';
-                      }
-                      return null;
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Campo de senha
-                  TextFormField(
-                    controller: _senhaController,
-                    obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      labelText: 'Senha',
-                      hintText: 'Digite sua senha',
-                      prefixIcon: const Icon(Icons.lock),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
+                    const SizedBox(height: 20), //altura entre logo e texto
+                    // Título
+                    const Text(
+                      'Sua experiência única',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: AppTheme.subTextColor,
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor, digite sua senha';
-                      }
-                      if (value.length < 6) {
-                        return 'A senha deve ter pelo menos 6 caracteres';
-                      }
-                      return null;
-                    },
-                  ),
+                    const SizedBox(
+                      height: 80,
+                    ), // Espaço ajustado para centralizar o conjunto
+                    // Campo de email
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        hintText: 'Digite seu email',
+                        prefixIcon: Icon(Icons.email),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, digite seu email';
+                        }
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                          return 'Digite um email válido';
+                        }
+                        return null;
+                      },
+                    ),
 
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // Checkbox "Lembrar-me"
-                  Row(
-                    children: [
-                      Transform.scale(
-                        scale: 0.9,
-                        child: Checkbox(
-                          value: _rememberMe,
-                          onChanged: (value) {
+                    // Campo de senha
+                    TextFormField(
+                      controller: _senhaController,
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: 'Senha',
+                        hintText: 'Digite sua senha',
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
                             setState(() {
-                              _rememberMe = value ?? false;
+                              _obscurePassword = !_obscurePassword;
                             });
                           },
-                          activeColor: AppTheme.secondaryColor,
-                          checkColor: Colors.white,
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _rememberMe = !_rememberMe;
-                            });
-                          },
-                          child: Text(
-                            'Lembrar email e senha',
-                            style: TextStyle(
-                              color: AppTheme.subTextColor,
-                              fontSize: 14,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor, digite sua senha';
+                        }
+                        if (value.length < 6) {
+                          return 'A senha deve ter pelo menos 6 caracteres';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Checkbox "Lembrar-me"
+                    Row(
+                      children: [
+                        Transform.scale(
+                          scale: 0.9,
+                          child: Checkbox(
+                            value: _rememberMe,
+                            onChanged: (value) {
+                              setState(() {
+                                _rememberMe = value ?? false;
+                              });
+                            },
+                            activeColor: AppTheme.secondaryColor,
+                            checkColor: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _rememberMe = !_rememberMe;
+                              });
+                            },
+                            child: Text(
+                              'Lembrar email e senha',
+                              style: TextStyle(
+                                color: AppTheme.subTextColor,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
 
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-                  // Botão de login
-                  SizedBox(
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _login,
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppTheme.primaryColor,
+                    // Botão de login
+                    SizedBox(
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _login,
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppTheme.primaryColor,
+                                  ),
                                 ),
-                              ),
-                            )
-                          : const Text('Entrar'),
+                              )
+                            : const Text('Entrar'),
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 16),
-
-                  // Link para cadastro
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CadastroScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      'Não tem uma conta? Cadastre-se',
-                      style: TextStyle(color: AppTheme.secondaryColor),
+                    const SizedBox(
+                      height: 60,
+                    ), // Espaço ajustado antes do logo NETPIX
+                    // Logo NETPIX APKS no rodapé
+                    Container(
+                      alignment: Alignment.center,
+                      child: Image.asset(
+                        'assets/images/NETPIX APKS.png',
+                        height: 70,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 12),
-
-                  // Link para esqueceu a senha
-                  TextButton(
-                    onPressed: () {
-                      // TODO: Implementar recuperação de senha
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Recuperação de senha em desenvolvimento',
-                          ),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      'Esqueceu sua senha?',
-                      style: TextStyle(color: AppTheme.subTextColor),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 60), // Espaço ajustado antes do logo NETPIX
-                  
-                  // Logo NETPIX APKS no rodapé
-                  Container(
-                    alignment: Alignment.center,
-                    child: Image.asset(
-                      'assets/images/NETPIX APKS.png',
-                      height: 70,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 20), // Espaço final
-                ],
+                    const SizedBox(height: 20), // Espaço final
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 }

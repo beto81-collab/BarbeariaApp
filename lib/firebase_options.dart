@@ -41,13 +41,13 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDlYzsIZolm8CZfsuhX7z-eUBBm_OudzCw',
-    appId: '1:200749841595:web:716ae76c8b437d5d3acf81',
+    apiKey: 'AIzaSyBD4I2RUQ_Yfaq4pLsDRjGrpw9H2ogF7FY',
+    appId: '1:200749841595:web:ca7eb71e1dda1d22877d9e',
     messagingSenderId: '200749841595',
     projectId: 'corte-real-6b077',
     authDomain: 'corte-real-6b077.firebaseapp.com',
-    storageBucket: 'corte-real-6b077.appspot.com',
-    measurementId: 'G-VRC3Q07S46',
+  storageBucket: 'corte-real-6b077.firebasestorage.app',
+    measurementId: 'G-7SJC3VNKTG',
   );
 
   static const FirebaseOptions android = FirebaseOptions(

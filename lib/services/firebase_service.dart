@@ -14,6 +14,53 @@ import '../models/servico.dart';
 import '../models/horario.dart';
 
 class FirebaseService {
+  /// Faz upload de uma imagem da vitrine usando bytes (para Flutter Web) e salva a URL no Firestore
+  static Future<void> uploadImagemVitrineBytes(Uint8List imageBytes) async {
+    try {
+      final fileName =
+          'vitrine/${DateTime.now().millisecondsSinceEpoch}_vitrine.jpg';
+      final ref = FirebaseStorage.instance.ref().child(fileName);
+      final uploadTask = await ref.putData(imageBytes);
+      final url = await uploadTask.ref.getDownloadURL();
+      // Salva a URL no Firestore (coleção 'vitrine')
+      await FirebaseFirestore.instance.collection('vitrine').add({
+        'url': url,
+        'data': DateTime.now(),
+      });
+    } catch (e) {
+      print('Erro ao fazer upload da imagem da vitrine (bytes): $e');
+      rethrow;
+    }
+  }
+
+  /// Faz upload de bytes (Flutter Web) com callback de progresso.
+  /// onProgress recebe o TaskSnapshot a cada evento de snapshot.
+  static Future<void> uploadImagemVitrineBytesWithProgress(
+    Uint8List imageBytes, {
+    void Function(TaskSnapshot snapshot)? onProgress,
+  }) async {
+    try {
+      final fileName =
+          'vitrine/${DateTime.now().millisecondsSinceEpoch}_vitrine.jpg';
+      final ref = FirebaseStorage.instance.ref().child(fileName);
+      final uploadTask = ref.putData(imageBytes);
+
+      if (onProgress != null) {
+        uploadTask.snapshotEvents.listen(onProgress);
+      }
+
+      final snapshot = await uploadTask;
+      final url = await snapshot.ref.getDownloadURL();
+      await FirebaseFirestore.instance.collection('vitrine').add({
+        'url': url,
+        'data': DateTime.now(),
+      });
+    } catch (e) {
+      print('Erro ao fazer upload da imagem da vitrine (bytes) com progresso: $e');
+      rethrow;
+    }
+  }
+
   /// Faz upload de uma imagem da vitrine para o Firebase Storage e salva a URL no Firestore
   static Future<void> uploadImagemVitrine(File imagemFile) async {
     try {
@@ -29,6 +76,33 @@ class FirebaseService {
       });
     } catch (e) {
       print('Erro ao fazer upload da imagem da vitrine: $e');
+      rethrow;
+    }
+  }
+
+  /// Faz upload de arquivo (mobile/desktop) com callback de progresso.
+  static Future<void> uploadImagemVitrineFileWithProgress(
+    File imagemFile, {
+    void Function(TaskSnapshot snapshot)? onProgress,
+  }) async {
+    try {
+      final fileName =
+          'vitrine/${DateTime.now().millisecondsSinceEpoch}_${imagemFile.path.split('/').last}';
+      final ref = FirebaseStorage.instance.ref().child(fileName);
+      final uploadTask = ref.putFile(imagemFile);
+
+      if (onProgress != null) {
+        uploadTask.snapshotEvents.listen(onProgress);
+      }
+
+      final snapshot = await uploadTask;
+      final url = await snapshot.ref.getDownloadURL();
+      await FirebaseFirestore.instance.collection('vitrine').add({
+        'url': url,
+        'data': DateTime.now(),
+      });
+    } catch (e) {
+      print('Erro ao fazer upload da imagem da vitrine (arquivo) com progresso: $e');
       rethrow;
     }
   }
@@ -96,6 +170,21 @@ class FirebaseService {
       return url;
     } catch (e) {
       print('Erro ao fazer upload da imagem: $e');
+      rethrow;
+    }
+  }
+
+  /// Faz upload de uma imagem usando bytes (para Flutter Web) e retorna a URL pública
+  static Future<String> uploadImagemProdutoBytes(Uint8List imageBytes) async {
+    try {
+      final fileName =
+          'produtos/${DateTime.now().millisecondsSinceEpoch}_produto.jpg';
+      final ref = FirebaseStorage.instance.ref().child(fileName);
+      final uploadTask = await ref.putData(imageBytes);
+      final url = await uploadTask.ref.getDownloadURL();
+      return url;
+    } catch (e) {
+      print('Erro ao fazer upload da imagem (bytes): $e');
       rethrow;
     }
   }
