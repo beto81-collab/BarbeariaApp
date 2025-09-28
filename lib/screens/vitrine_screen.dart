@@ -118,9 +118,9 @@ class _VitrineScreenState extends State<VitrineScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao enviar imagens: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao enviar imagens: $e')));
     } finally {
       if (!mounted) return;
       setState(() => _carregando = false);
@@ -171,11 +171,11 @@ class _VitrineScreenState extends State<VitrineScreen> {
                                 ),
                               )
                             : const Icon(Icons.cloud_upload),
-                        label:
-                            Text(_carregando ? 'Enviando...' : 'Enviar'),
-                        onPressed: (_imagensParaUpload.isEmpty &&
-                                _imagensBytesWeb.isEmpty) ||
-                            _carregando
+                        label: Text(_carregando ? 'Enviando...' : 'Enviar'),
+                        onPressed:
+                            (_imagensParaUpload.isEmpty &&
+                                    _imagensBytesWeb.isEmpty) ||
+                                _carregando
                             ? null
                             : _uploadImagens,
                       ),
@@ -217,13 +217,17 @@ class _VitrineScreenState extends State<VitrineScreen> {
                                           child: Text(
                                             '${(_progressoPorIndice[index]! * 100).toStringAsFixed(0)}%',
                                             style: const TextStyle(
-                                                color: Colors.white, fontSize: 12),
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                            ),
                                           ),
                                         )
                                       : GestureDetector(
                                           onTap: () {
                                             setState(() {
-                                              _imagensParaUpload.removeAt(index);
+                                              _imagensParaUpload.removeAt(
+                                                index,
+                                              );
                                             });
                                           },
                                           child: Container(
@@ -254,7 +258,8 @@ class _VitrineScreenState extends State<VitrineScreen> {
                                 Positioned(
                                   top: 2,
                                   right: 2,
-                                  child: _progressoPorIndice.containsKey(webIndex)
+                                  child:
+                                      _progressoPorIndice.containsKey(webIndex)
                                       ? Container(
                                           padding: const EdgeInsets.all(6),
                                           decoration: const BoxDecoration(
@@ -264,13 +269,17 @@ class _VitrineScreenState extends State<VitrineScreen> {
                                           child: Text(
                                             '${(_progressoPorIndice[webIndex]! * 100).toStringAsFixed(0)}%',
                                             style: const TextStyle(
-                                                color: Colors.white, fontSize: 12),
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                            ),
                                           ),
                                         )
                                       : GestureDetector(
                                           onTap: () {
                                             setState(() {
-                                              _imagensBytesWeb.removeAt(webIndex);
+                                              _imagensBytesWeb.removeAt(
+                                                webIndex,
+                                              );
                                             });
                                           },
                                           child: Container(

@@ -38,7 +38,9 @@ class ServicosScreen extends StatelessWidget {
               return Card(
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: AppTheme.secondaryColor.withOpacity(0.1),
+                    backgroundColor: AppTheme.secondaryColor.withAlpha(
+                      (0.1 * 255).round(),
+                    ),
                     child: const Icon(
                       Icons.design_services,
                       color: AppTheme.secondaryColor,

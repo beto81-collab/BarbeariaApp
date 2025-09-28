@@ -46,6 +46,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
       // Carregar agendamentos do usuário
       final agendamentos = await FirebaseService.obterAgendamentosUsuario();
 
+      if (!mounted) return;
       setState(() {
         _usuario = usuario;
         _agendamentos = agendamentos;
@@ -83,6 +84,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
       // Salvar no Firebase
       await FirebaseService.atualizarUsuario(usuarioAtualizado);
 
+      if (!mounted) return;
       setState(() {
         _usuario = usuarioAtualizado;
         _isEditing = false;
@@ -358,9 +360,11 @@ class _PerfilScreenState extends State<PerfilScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor.withOpacity(0.1),
+        color: AppTheme.primaryColor.withAlpha((0.1 * 255).round()),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.secondaryColor.withOpacity(0.3)),
+        border: Border.all(
+          color: AppTheme.secondaryColor.withAlpha((0.3 * 255).round()),
+        ),
       ),
       child: Column(
         children: [
@@ -410,9 +414,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 ),
                 if (_agendamentos.length > 3)
                   TextButton(
-                    onPressed: () {
-                      // TODO: Navegar para tela de histórico completo
-                    },
+                    onPressed: () {},
                     child: const Text(
                       'Ver todos',
                       style: TextStyle(color: AppTheme.secondaryColor),
@@ -436,9 +438,11 @@ class _PerfilScreenState extends State<PerfilScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppTheme.primaryColor.withOpacity(0.05),
+          color: AppTheme.primaryColor.withAlpha((0.05 * 255).round()),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppTheme.secondaryColor.withOpacity(0.2)),
+          border: Border.all(
+            color: AppTheme.secondaryColor.withAlpha((0.2 * 255).round()),
+          ),
         ),
         child: Row(
           children: [

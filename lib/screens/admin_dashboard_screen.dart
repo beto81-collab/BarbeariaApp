@@ -10,6 +10,7 @@ import 'backup_screen.dart';
 import 'clientes_screen.dart';
 import 'aniversariantes_screen.dart';
 import 'vitrine_screen.dart';
+import 'promocoes_screen.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -55,20 +56,11 @@ class AdminDashboardScreen extends StatelessWidget {
             _AdminTile(
               icon: Icons.local_offer,
               label: 'Promoções',
-              onTap: () => showDialog(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Em breve'),
-                  content: const Text(
-                    'Tela de promoções ainda não implementada.',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text('OK'),
-                    ),
-                  ],
-                ),
+              // Alterado para abrir a tela de Promoções em vez do diálogo "Em breve".
+              // Agora redireciona para `PromocoesScreen` que já está implementada.
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PromocoesScreen()),
               ),
             ),
             _AdminTileComBadge(

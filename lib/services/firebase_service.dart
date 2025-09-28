@@ -56,7 +56,9 @@ class FirebaseService {
         'data': DateTime.now(),
       });
     } catch (e) {
-      print('Erro ao fazer upload da imagem da vitrine (bytes) com progresso: $e');
+      print(
+        'Erro ao fazer upload da imagem da vitrine (bytes) com progresso: $e',
+      );
       rethrow;
     }
   }
@@ -102,7 +104,9 @@ class FirebaseService {
         'data': DateTime.now(),
       });
     } catch (e) {
-      print('Erro ao fazer upload da imagem da vitrine (arquivo) com progresso: $e');
+      print(
+        'Erro ao fazer upload da imagem da vitrine (arquivo) com progresso: $e',
+      );
       rethrow;
     }
   }
@@ -137,6 +141,19 @@ class FirebaseService {
       await ref.delete();
     } catch (e) {
       print('Erro ao remover imagem da vitrine: $e');
+      rethrow;
+    }
+  }
+
+  /// Adiciona uma entrada na coleção 'vitrine' usando uma URL já existente
+  static Future<void> adicionarImagemVitrinePorUrl(String url) async {
+    try {
+      await FirebaseFirestore.instance.collection('vitrine').add({
+        'url': url,
+        'data': DateTime.now(),
+      });
+    } catch (e) {
+      print('Erro ao adicionar imagem na vitrine por URL: $e');
       rethrow;
     }
   }
@@ -224,9 +241,65 @@ class FirebaseService {
 
   static Future<String> criarPromocao(Promocao promocao) async {
     try {
+      // Preparar dados e tentar anexar imagem do produto se houver produtoId
+      final Map<String, dynamic> docData = Map<String, dynamic>.from(
+        promocao.toJson(),
+      );
+      if (docData['produtoId'] != null &&
+          (docData['imagem'] == null ||
+              (docData['imagem'] as String).isEmpty)) {
+        try {
+          final prodDoc = await _firestore
+              .collection(_productsCollection)
+              .doc(docData['produtoId'])
+              .get();
+          if (prodDoc.exists && prodDoc.data() != null) {
+            final foto = (prodDoc.data()!['foto'] as String?) ?? '';
+            if (foto.isNotEmpty) {
+              try {
+                if (foto.startsWith('gs://') ||
+                    foto.contains('storage.googleapis.com')) {
+                  final ref = FirebaseStorage.instance.refFromURL(foto);
+                  docData['imagem'] = await ref.getDownloadURL();
+                } else if (foto.startsWith('http')) {
+                  docData['imagem'] = foto;
+                } else {
+                  // caminho de asset (ex: assets/...) — não é possível enviar automaticamente
+                  // podemos logar para revisão manual
+                  print('Produto com foto em asset ou caminho não-http: $foto');
+                }
+              } catch (e) {
+                print('Aviso: falha ao resolver URL da foto do produto: $e');
+              }
+            }
+          }
+        } catch (e) {
+          print('Aviso: falha ao buscar produto para obter foto: $e');
+        }
+      }
       final doc = await _firestore
           .collection(_promocoesCollection)
-          .add(promocao.toJson());
+          .add(docData);
+      // Também salvar uma cópia JSON no Firebase Storage em 'promocoes/{id}.json'
+      try {
+        final id = doc.id;
+        final Map<String, dynamic> dataToSave = {
+          ...docData,
+          'id': id,
+          'salvoEm': DateTime.now().toIso8601String(),
+        };
+        final jsonStr = jsonEncode(dataToSave);
+        final fileName = 'promocoes/${id}.json';
+        final ref = FirebaseStorage.instance.ref().child(fileName);
+        await ref.putData(
+          Uint8List.fromList(utf8.encode(jsonStr)),
+          SettableMetadata(contentType: 'application/json'),
+        );
+      } catch (e) {
+        // Não bloquear a criação se o upload falhar; apenas logar
+        print('Aviso: falha ao salvar promoção no Storage: $e');
+      }
+
       BackupAutoConfig.houveAlteracao = true;
       return doc.id;
     } catch (e) {
@@ -237,10 +310,64 @@ class FirebaseService {
 
   static Future<void> atualizarPromocao(Promocao promocao) async {
     try {
+      // Preparar dados de update e tentar anexar imagem do produto se houver produtoId
+      final Map<String, dynamic> updateData = Map<String, dynamic>.from(
+        promocao.toJson(),
+      );
+      if (updateData['produtoId'] != null &&
+          (updateData['imagem'] == null ||
+              (updateData['imagem'] as String).isEmpty)) {
+        try {
+          final prodDoc = await _firestore
+              .collection(_productsCollection)
+              .doc(updateData['produtoId'])
+              .get();
+          if (prodDoc.exists && prodDoc.data() != null) {
+            final foto = (prodDoc.data()!['foto'] as String?) ?? '';
+            if (foto.isNotEmpty) {
+              try {
+                if (foto.startsWith('gs://') ||
+                    foto.contains('storage.googleapis.com')) {
+                  final ref = FirebaseStorage.instance.refFromURL(foto);
+                  updateData['imagem'] = await ref.getDownloadURL();
+                } else if (foto.startsWith('http')) {
+                  updateData['imagem'] = foto;
+                } else {
+                  print('Produto com foto em asset ou caminho não-http: $foto');
+                }
+              } catch (e) {
+                print(
+                  'Aviso: falha ao resolver URL da foto do produto (update): $e',
+                );
+              }
+            }
+          }
+        } catch (e) {
+          print('Aviso: falha ao buscar produto para obter foto (update): $e');
+        }
+      }
       await _firestore
           .collection(_promocoesCollection)
           .doc(promocao.id)
-          .update(promocao.toJson());
+          .update(updateData);
+      // Atualizar a cópia JSON no Firebase Storage também
+      try {
+        final Map<String, dynamic> dataToSave = {
+          ...updateData,
+          'id': promocao.id,
+          'salvoEm': DateTime.now().toIso8601String(),
+        };
+        final jsonStr = jsonEncode(dataToSave);
+        final fileName = 'promocoes/${promocao.id}.json';
+        final ref = FirebaseStorage.instance.ref().child(fileName);
+        await ref.putData(
+          Uint8List.fromList(utf8.encode(jsonStr)),
+          SettableMetadata(contentType: 'application/json'),
+        );
+      } catch (e) {
+        print('Aviso: falha ao atualizar promoção no Storage: $e');
+      }
+
       BackupAutoConfig.houveAlteracao = true;
     } catch (e) {
       print('Erro ao atualizar promoção: $e');
@@ -251,6 +378,16 @@ class FirebaseService {
   static Future<void> removerPromocao(String id) async {
     try {
       await _firestore.collection(_promocoesCollection).doc(id).delete();
+      // Remover também o arquivo JSON no Storage, se existir
+      try {
+        final fileName = 'promocoes/${id}.json';
+        final ref = FirebaseStorage.instance.ref().child(fileName);
+        await ref.delete();
+      } catch (e) {
+        // Se não existir ou falhar, apenas logar
+        print('Aviso: falha ao remover arquivo de promoção no Storage: $e');
+      }
+
       BackupAutoConfig.houveAlteracao = true;
     } catch (e) {
       print('Erro ao remover promoção: $e');

@@ -97,20 +97,18 @@ class _CadastroScreenState extends State<CadastroScreen> {
   Future<void> _selecionarDataNascimento() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().subtract(
-        const Duration(days: 365 * 18),
-      ), // 18 anos atrás
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      locale: const Locale('pt', 'BR'),
-      builder: (context, child) {
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+      confirmText: 'OK', // ou '' / ' ' conforme preferir
+      builder: (ctx, child) {
+        final base = Theme.of(ctx);
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppTheme.secondaryColor,
-              onPrimary: Colors.white,
-              surface: AppTheme.surfaceColor,
-              onSurface: AppTheme.textColor,
+          data: base.copyWith(
+            textButtonTheme: TextButtonThemeData(
+              style: ButtonStyle(
+                foregroundColor: MaterialStateProperty.all(Colors.white),
+              ),
             ),
           ),
           child: child!,
@@ -482,7 +480,9 @@ class _CadastroScreenState extends State<CadastroScreen> {
                     color: AppTheme.surfaceColor,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: AppTheme.secondaryColor.withOpacity(0.3),
+                      color: AppTheme.secondaryColor.withAlpha(
+                        (0.3 * 255).round(),
+                      ),
                     ),
                   ),
                   child: const Column(

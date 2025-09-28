@@ -5,7 +5,7 @@ import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-// Para Uint8List
+// 'dart:typed_data' não é necessário porque usamos 'foundation.dart' para Uint8List
 
 class ProdutosScreen extends StatelessWidget {
   const ProdutosScreen({super.key});
@@ -40,19 +40,74 @@ class ProdutosScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final produto = produtos[index];
               return Card(
+                elevation: 4,
                 child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppTheme.secondaryColor.withOpacity(0.1),
-                    child: const Icon(
-                      Icons.shopping_bag,
-                      color: AppTheme.secondaryColor,
-                    ),
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: produto.foto.isNotEmpty
+                        ? Image.network(
+                            produto.foto,
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  width: 60,
+                                  height: 60,
+                                  color: AppTheme.secondaryColor.withAlpha(
+                                    (0.1 * 255).round(),
+                                  ),
+                                  child: const Icon(
+                                    Icons.shopping_bag,
+                                    color: AppTheme.secondaryColor,
+                                  ),
+                                ),
+                          )
+                        : Container(
+                            width: 60,
+                            height: 60,
+                            color: AppTheme.secondaryColor.withAlpha(
+                              (0.1 * 255).round(),
+                            ),
+                            child: const Icon(
+                              Icons.shopping_bag,
+                              color: AppTheme.secondaryColor,
+                            ),
+                          ),
                   ),
                   title: Text(
                     produto.nome,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text(produto.descricao),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(produto.descricao),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.inventory,
+                            size: 16,
+                            color: produto.estoque > 0
+                                ? Colors.green
+                                : Colors.red,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Estoque: ${produto.estoque}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: produto.estoque > 0
+                                  ? Colors.green
+                                  : Colors.red,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -128,6 +183,7 @@ class _ProdutoDialog extends StatefulWidget {
 }
 
 class _ProdutoDialogState extends State<_ProdutoDialog> {
+  bool _carregandoImagem = false;
   void _removerImagem() {
     setState(() {
       _imagemFile = null;
@@ -144,6 +200,9 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
   late TextEditingController _descricaoController;
   late TextEditingController _precoController;
   late TextEditingController _estoqueController;
+  late TextEditingController _categoriaController;
+  late TextEditingController _marcaController;
+  CategoriaProduto? _categoriaSelecionada;
 
   @override
   void initState() {
@@ -158,7 +217,22 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
     _estoqueController = TextEditingController(
       text: widget.produto?.estoque.toString() ?? '',
     );
+    _categoriaController = TextEditingController(
+      text: widget.produto?.categoria ?? '',
+    );
+    _marcaController = TextEditingController(text: widget.produto?.marca ?? '');
     _fotoUrl = widget.produto?.foto;
+
+    // Definir categoria selecionada se for edição
+    if (widget.produto != null && widget.produto!.categoria.isNotEmpty) {
+      try {
+        _categoriaSelecionada = CategoriaProduto.values.firstWhere(
+          (cat) => cat.label == widget.produto!.categoria,
+        );
+      } catch (e) {
+        _categoriaSelecionada = null;
+      }
+    }
   }
 
   @override
@@ -167,6 +241,8 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
     _descricaoController.dispose();
     _precoController.dispose();
     _estoqueController.dispose();
+    _categoriaController.dispose();
+    _marcaController.dispose();
     super.dispose();
   }
 
@@ -264,6 +340,32 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
                 validator: (v) =>
                     v == null || v.isEmpty ? 'Informe o preço' : null,
               ),
+              // Dropdown para categoria
+              DropdownButtonFormField<CategoriaProduto>(
+                value: _categoriaSelecionada,
+                decoration: const InputDecoration(labelText: 'Categoria'),
+                items: CategoriaProduto.values.map((categoria) {
+                  return DropdownMenuItem<CategoriaProduto>(
+                    value: categoria,
+                    child: Text(categoria.label),
+                  );
+                }).toList(),
+                onChanged: (CategoriaProduto? newValue) {
+                  setState(() {
+                    _categoriaSelecionada = newValue;
+                    _categoriaController.text = newValue?.label ?? '';
+                  });
+                },
+                validator: (v) => v == null ? 'Selecione uma categoria' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _marcaController,
+                decoration: const InputDecoration(labelText: 'Marca'),
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Informe a marca' : null,
+              ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _estoqueController,
                 decoration: const InputDecoration(labelText: 'Estoque'),
@@ -286,7 +388,7 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
   }
 
   void _salvarProduto() async {
-    print("Iniciando processo de salvar produto");
+    debugPrint("Iniciando processo de salvar produto");
     if (_formKey.currentState?.validate() != true) return;
 
     final nome = _nomeController.text.trim();
@@ -294,15 +396,45 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
     final preco =
         double.tryParse(_precoController.text.replaceAll(',', '.')) ?? 0.0;
     final estoque = int.tryParse(_estoqueController.text) ?? 0;
+    final categoria = _categoriaSelecionada?.label ?? '';
+    final marca = _marcaController.text.trim();
 
     String fotoUrl = _fotoUrl ?? '';
     // Faz upload da imagem apenas se houver uma nova selecionada
     if (kIsWeb && _imagemBytes != null) {
       fotoUrl = await FirebaseService.uploadImagemProdutoBytes(_imagemBytes!);
-      print("Imagem salva com URL: $fotoUrl");
+      debugPrint("Imagem salva com URL: $fotoUrl");
+      // Registrar a imagem também na vitrine
+      try {
+        if (fotoUrl.isNotEmpty) {
+          await FirebaseService.adicionarImagemVitrinePorUrl(fotoUrl);
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Imagem adicionada à vitrine')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao adicionar imagem à vitrine: $e')),
+        );
+      }
     } else if (!kIsWeb && _imagemFile != null) {
       fotoUrl = await FirebaseService.uploadImagemProduto(_imagemFile!);
-      print("Imagem salva com URL: $fotoUrl");
+      debugPrint("Imagem salva com URL: $fotoUrl");
+      // Registrar a imagem também na vitrine
+      try {
+        if (fotoUrl.isNotEmpty) {
+          await FirebaseService.adicionarImagemVitrinePorUrl(fotoUrl);
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Imagem adicionada à vitrine')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao adicionar imagem à vitrine: $e')),
+        );
+      }
     }
 
     if (widget.produto == null) {
@@ -312,13 +444,14 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
         nome: nome,
         descricao: descricao,
         preco: preco,
-        categoria: '',
-        marca: '',
+        categoria: categoria,
+        marca: marca,
         foto: fotoUrl,
         avaliacao: 0,
         estoque: estoque,
       );
       await FirebaseService.adicionarProduto(novo);
+      if (!mounted) return;
     } else {
       // Editar produto existente
       final editado = Produto(
@@ -326,67 +459,104 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
         nome: nome,
         descricao: descricao,
         preco: preco,
-        categoria: widget.produto!.categoria,
-        marca: widget.produto!.marca,
+        categoria: categoria,
+        marca: marca,
         foto: fotoUrl,
         avaliacao: widget.produto!.avaliacao,
         estoque: estoque,
         disponivel: widget.produto!.disponivel,
       );
       await FirebaseService.atualizarProduto(editado);
+      if (!mounted) return;
     }
     Navigator.pop(context);
   }
 
   Future<void> _pickImageFromCamera() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 80,
-    );
-    if (pickedFile != null) {
-      if (kIsWeb) {
-        // Para web, ler os bytes da imagem
-        final bytes = await pickedFile.readAsBytes();
-        setState(() {
-          _imagemBytes = bytes;
-          _imagemFile = null;
-          _fotoUrl = null;
-        });
-      } else {
-        // Para mobile/desktop, usar File
-        setState(() {
-          _imagemFile = File(pickedFile.path);
-          _imagemBytes = null;
-          _fotoUrl = null;
-        });
+    if (_carregandoImagem) return;
+    setState(() => _carregandoImagem = true);
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+      );
+      if (pickedFile != null) {
+        if (kIsWeb) {
+          // Para web, ler os bytes da imagem
+          final bytes = await pickedFile.readAsBytes();
+          if (!mounted) return;
+          setState(() {
+            _imagemBytes = bytes;
+            _imagemFile = null;
+            _fotoUrl = null;
+          });
+        } else {
+          if (!mounted) return;
+          // Para mobile/desktop, usar File
+          setState(() {
+            _imagemFile = File(pickedFile.path);
+            _imagemBytes = null;
+            _fotoUrl = null;
+          });
+        }
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Imagem selecionada com sucesso')),
+        );
       }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao acessar câmera: $e')));
+    } finally {
+      if (mounted) setState(() => _carregandoImagem = false);
     }
   }
 
   Future<void> _pickImageFromGallery() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
-    if (pickedFile != null) {
-      if (kIsWeb) {
-        // Para web, ler os bytes da imagem
-        final bytes = await pickedFile.readAsBytes();
-        setState(() {
-          _imagemBytes = bytes;
-          _imagemFile = null;
-          _fotoUrl = null;
-        });
-      } else {
-        // Para mobile/desktop, usar File
-        setState(() {
-          _imagemFile = File(pickedFile.path);
-          _imagemBytes = null;
-          _fotoUrl = null;
-        });
+    if (_carregandoImagem) return;
+    setState(() => _carregandoImagem = true);
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+      if (pickedFile != null) {
+        if (kIsWeb) {
+          // Para web, ler os bytes da imagem
+          final bytes = await pickedFile.readAsBytes();
+          if (!mounted) return;
+          setState(() {
+            _imagemBytes = bytes;
+            _imagemFile = null;
+            _fotoUrl = null;
+          });
+        } else {
+          if (!mounted) return;
+          // Para mobile/desktop, usar File
+          setState(() {
+            _imagemFile = File(pickedFile.path);
+            _imagemBytes = null;
+            _fotoUrl = null;
+          });
+        }
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Imagem selecionada da galeria')),
+        );
       }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao abrir galeria: $e')));
+    } finally {
+      if (mounted) setState(() => _carregandoImagem = false);
     }
   }
 }

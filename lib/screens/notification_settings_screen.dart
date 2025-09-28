@@ -40,7 +40,7 @@ class _NotificationSettingsScreenState
                   end: Alignment.bottomRight,
                   colors: [
                     AppTheme.primaryColor,
-                    AppTheme.secondaryColor.withOpacity(0.8),
+                    AppTheme.secondaryColor.withAlpha((0.8 * 255).round()),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
@@ -70,7 +70,7 @@ class _NotificationSettingsScreenState
                   Text(
                     'Configure quando e como deseja receber notificações da CORTE REAL',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withAlpha((0.9 * 255).round()),
                       fontSize: 14,
                     ),
                   ),
@@ -199,7 +199,7 @@ class _NotificationSettingsScreenState
                 color: AppTheme.cardColor,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppTheme.borderColor.withOpacity(0.1),
+                  color: AppTheme.borderColor.withAlpha((0.1 * 255).round()),
                 ),
               ),
               child: Column(
@@ -284,7 +284,9 @@ class _NotificationSettingsScreenState
       decoration: BoxDecoration(
         color: AppTheme.cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.borderColor.withOpacity(0.1)),
+        border: Border.all(
+          color: AppTheme.borderColor.withAlpha((0.1 * 255).round()),
+        ),
       ),
       child: SwitchListTile(
         contentPadding: const EdgeInsets.all(16),
@@ -293,8 +295,8 @@ class _NotificationSettingsScreenState
           height: 40,
           decoration: BoxDecoration(
             color: value
-                ? AppTheme.secondaryColor.withOpacity(0.1)
-                : AppTheme.subTextColor.withOpacity(0.1),
+                ? AppTheme.secondaryColor.withAlpha((0.1 * 255).round())
+                : AppTheme.subTextColor.withAlpha((0.1 * 255).round()),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Icon(

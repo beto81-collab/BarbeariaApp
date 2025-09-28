@@ -46,7 +46,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '200749841595',
     projectId: 'corte-real-6b077',
     authDomain: 'corte-real-6b077.firebaseapp.com',
-  storageBucket: 'corte-real-6b077.firebasestorage.app',
+    storageBucket: 'corte-real-6b077.firebasestorage.app',
     measurementId: 'G-7SJC3VNKTG',
   );
 

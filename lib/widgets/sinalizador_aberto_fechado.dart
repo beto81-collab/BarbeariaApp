@@ -114,7 +114,7 @@ class _SinalizadorAbertoFechadoState extends State<SinalizadorAbertoFechado> {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: cor.withOpacity(0.5),
+                color: cor.withAlpha((0.5 * 255).round()),
                 blurRadius: 8,
                 spreadRadius: 2,
               ),

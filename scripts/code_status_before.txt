@@ -1,0 +1,219 @@
+﻿
+Version:          Code 1.104.2 (e3a5acfb517a443235981655413d566533107e92, 2025-09-24T11:21:37.073Z)
+OS Version:       Windows_NT x64 10.0.19045
+CPUs:             Intel(R) Core(TM) i7-4770 CPU @ 3.40GHz (8 x 3392)
+Memory (System):  15.90GB (8.21GB free)
+VM:               0%
+Screen Reader:    no
+Process Argv:     --crash-reporter-id e5d987fd-cb0e-440e-8272-415bf76c1b37
+GPU Status:       2d_canvas:                              enabled
+                  direct_rendering_display_compositor:    disabled_off_ok
+                  gpu_compositing:                        enabled
+                  multiple_raster_threads:                enabled_on
+                  opengl:                                 enabled_on
+                  rasterization:                          enabled
+                  raw_draw:                               disabled_off_ok
+                  skia_graphite:                          disabled_off
+                  trees_in_viz:                           disabled_off
+                  video_decode:                           enabled
+                  video_encode:                           enabled
+                  vulkan:                                 disabled_off
+                  webgl:                                  enabled
+                  webgl2:                                 enabled
+                  webgpu:                                 enabled
+                  webnn:                                  disabled_off
+
+CPU %	Mem MB	   PID	Process
+    0	   139	  9652	code
+    2	   218	  1816	window [1] (fix_copilot_restart.ps1 - BarbeariaApp - Visual Studio Code)
+    0	    95	  2264	   utility-process
+    0	    16	  2864	     c:\Users\NETPIX\.vscode\extensions\vscjava.migrate-java-to-azure-1.5.2-win32-x64\out\mcp-server.exe --serverType codetocloud --codeToCloudDeployWorkflowName quickstart --codeToCloudDeployToExistingWorkflowName deploy-to-existing --codeToCloudContainerizationWorkflowName containerization
+    0	    10	 19184	       C:\Windows\system32\conhost.exe 0x4
+    0	    31	  8416	     c:\Users\NETPIX\.vscode\extensions\ms-azuretools.vscode-azure-mcp-server-0.8.2-win32-x64\server\azmcp.exe server start --mode namespace
+    0	     5	  8292	       C:\Windows\system32\conhost.exe 0x4
+    0	     7	 15872	     "C:\Program Files\dart-sdk\bin\dart.exe" mcp-server
+    0	     5	 15980	       C:\Windows\system32\conhost.exe 0x4
+    0	     5	 17012	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\dart_mcp_server_aot.dart.snapshot"
+    0	     4	 16720	         "C:\Program Files\dart-sdk\bin\dart.exe" language-server --protocol lsp
+    0	    10	  4736	           C:\Windows\system32\conhost.exe 0x4
+    0	     3	 16196	           "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\analysis_server_aot.dart.snapshot" --protocol lsp
+    0	   148	  2568	shared-process
+    0	   140	  2852	   window
+    0	    16	  5876	   utility-network-service
+    0	   139	  6920	   window
+    0	    68	  7448	   
+    2	    74	  8032	   gpu-process
+    0	    15	  8500	extension-host [4]
+    0	     4	  5288	     "C:\Program Files\dart-sdk\bin\dart.exe" mcp-server
+    0	     2	 12524	       C:\Windows\system32\conhost.exe 0x4
+    0	     5	 17956	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\dart_mcp_server_aot.dart.snapshot"
+    0	     4	  1112	         "C:\Program Files\dart-sdk\bin\dart.exe" language-server --protocol lsp
+    0	     2	 17416	           C:\Windows\system32\conhost.exe 0x4
+    0	     3	 18628	           "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\analysis_server_aot.dart.snapshot" --protocol lsp
+    0	    34	 11640	     c:\Users\NETPIX\.vscode\extensions\ms-azuretools.vscode-azure-mcp-server-0.8.2-win32-x64\server\azmcp.exe server start --mode namespace
+    0	     2	 11212	       C:\Windows\system32\conhost.exe 0x4
+    0	    12	  8508	extension-host [5]
+    0	    30	 10032	     c:\Users\NETPIX\.vscode\extensions\ms-azuretools.vscode-azure-mcp-server-0.8.2-win32-x64\server\azmcp.exe server start --mode namespace
+    0	     2	 18452	       C:\Windows\system32\conhost.exe 0x4
+    0	     4	 18132	     "C:\Program Files\dart-sdk\bin\dart.exe" mcp-server
+    0	     2	 18528	       C:\Windows\system32\conhost.exe 0x4
+    0	     3	 19372	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\dart_mcp_server_aot.dart.snapshot"
+    0	     2	 17672	         "C:\Program Files\dart-sdk\bin\dart.exe" language-server --protocol lsp
+    0	     1	 18012	           C:\Windows\system32\conhost.exe 0x4
+    0	     5	 18764	           "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\analysis_server_aot.dart.snapshot" --protocol lsp
+    0	    20	 19028	     c:\Users\NETPIX\.vscode\extensions\ms-azuretools.vscode-azure-github-copilot-1.0.117-win32-x64\dist\node_modules\aidriver.win-x64\AIServiceLocalPackage.exe --urls=http://pipe:/azcp-6fd87bf82d11 --environment=Production
+    0	     1	  8328	       C:\Windows\system32\conhost.exe 0x4
+    0	    92	  9492	extension-host [1]
+    0	     4	  6844	     electron-nodejs (eslintServer.js )
+    0	     4	  7164	     C:\Windows\system32\cmd.exe /d /s /c ""C:\FLUTTER\flutter\bin\flutter.bat" "daemon""
+    0	    22	 11980	       electron-nodejs (config.js )
+    0	     3	 19820	         C:\Users\NETPIX\AppData\Local\Android\sdk\platform-tools\adb.exe devices -l
+    0	     6	 21372	           C:\Windows\system32\conhost.exe 0x4
+    0	    10	 14044	       C:\Windows\system32\conhost.exe 0x4
+    0	     4	  7708	     C:\FLUTTER\flutter\bin\cache\dart-sdk\bin\dart.exe devtools --machine --allow-embedding --dtd-uri ws://127.0.0.1:59073/QdRk_WZZ1fE=
+    0	    10	  6776	       C:\Windows\system32\conhost.exe 0x4
+    0	     4	  8132	     C:\Windows\system32\cmd.exe /d /s /c ""c:\Users\NETPIX\.vscode\extensions\vscjava.vscode-gradle-3.17.0\lib\gradle-server.bat" "--port=59109" "--startBuildServer=true" "--languageServerPipePath=\\.\pipe\7a5867466c95c2754d3c19888e0de0ee-sock" "--pipeName=\\.\pipe\da34a4d55667b7e23f9582ba06cc32fe-sock" "--bundleDir=c:\Users\NETPIX\.vscode\extensions\vscjava.vscode-gradle-3.17.0\server""
+    0	     6	 10548	       "c:\Users\NETPIX\.vscode\extensions\redhat.java-1.45.0-win32-x64\jre\21.0.8-win32-x86_64/bin/java.exe"  "-Dfile.encoding=UTF-8"  --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-opens=java.base/java.nio.charset=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED  -classpath "c:\Users\NETPIX\.vscode\extensions\vscjava.vscode-gradle-3.17.0\lib\gradle-server.jar" com.github.badsyntax.gradle.GradleServer "--port=59109" "--startBuildServer=true" "--languageServerPipePath=\\.\pipe\7a5867466c95c2754d3c19888e0de0ee-sock" "--pipeName=\\.\pipe\da34a4d55667b7e23f9582ba06cc32fe-sock" "--bundleDir=c:\Users\NETPIX\.vscode\extensions\vscjava.vscode-gradle-3.17.0\server"
+    0	    10	 12916	       C:\Windows\system32\conhost.exe 0x4
+    0	    10	 11680	     c:\Users\NETPIX\.vscode\extensions\redhat.java-1.45.0-win32-x64\jre\21.0.8-win32-x86_64\bin\java --add-modules=ALL-SYSTEM --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/sun.nio.fs=ALL-UNNAMED -Declipse.application=org.eclipse.jdt.ls.core.id1 -Dosgi.bundles.defaultStartLevel=4 -Declipse.product=org.eclipse.jdt.ls.core.product -Djava.import.generatesMetadataFilesAtProjectRoot=false -DDetectVMInstallationsJob.disabled=true -Dfile.encoding=utf8 -XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m -Xlog:disable -javaagent:c:\Users\NETPIX\.vscode\extensions\redhat.java-1.45.0-win32-x64\lombok\lombok-1.18.39-4050.jar -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=c:\Users\NETPIX\AppData\Roaming\Code\User\workspaceStorage\3bfb4054825169ead5b106c634740808\redhat.java -Daether.dependencyCollector.impl=bf -jar c:\Users\NETPIX\.vscode\extensions\redhat.java-1.45.0-win32-x64\server\plugins\org.eclipse.equinox.launcher_1.7.0.v20250519-0528.jar -configuration c:\Users\NETPIX\AppData\Roaming\Code\User\globalStorage\redhat.java\1.45.0\config_win -data c:\Users\NETPIX\AppData\Roaming\Code\User\workspaceStorage\3bfb4054825169ead5b106c634740808\redhat.java\jdt_ws --pipe=\\.\pipe\lsp-eac96fe4e5e17777529886f425c34041-sock
+    0	    28	 15220	       "C:\Program Files\Java\jdk-21\bin\java.exe" --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-opens=java.base/java.nio.charset=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.xml/javax.xml.namespace=ALL-UNNAMED -XX:MaxMetaspaceSize=4G -XX:ReservedCodeCacheSize=512m -XX:+HeapDumpOnOutOfMemoryError -Xmx8G -Dfile.encoding=UTF-8 -Duser.country=BR -Duser.language=pt -Duser.variant -cp C:\Users\NETPIX\.gradle\wrapper\dists\gradle-8.12-all\ejduaidbjup3bmmkhw3rie4zb\gradle-8.12\lib\gradle-daemon-main-8.12.jar -javaagent:C:\Users\NETPIX\.gradle\wrapper\dists\gradle-8.12-all\ejduaidbjup3bmmkhw3rie4zb\gradle-8.12\lib\agents\gradle-instrumentation-agent-8.12.jar org.gradle.launcher.daemon.bootstrap.GradleDaemon 8.12
+    0	    11	 12000	     c:\Users\NETPIX\.vscode\extensions\vscjava.migrate-java-to-azure-1.5.2-win32-x64\out\mcp-server.exe --serverType codetocloud --codeToCloudDeployWorkflowName quickstart --codeToCloudDeployToExistingWorkflowName deploy-to-existing --codeToCloudContainerizationWorkflowName containerization
+    0	    10	 10792	       C:\Windows\system32\conhost.exe 0x4
+    0	     5	 13496	     C:\FLUTTER\flutter\bin\cache\dart-sdk\bin\dart.exe language-server --protocol=lsp --client-id=VS-Code --client-version=3.118.2
+    0	     9	 13688	       C:\FLUTTER\flutter\bin\cache\dart-sdk\bin\dartaotruntime.exe --new_gen_semi_max_size=32 --new_gen_growth_factor=4 C:\FLUTTER\flutter\bin\cache\dart-sdk\bin\snapshots\analysis_server_aot.dart.snapshot --protocol=lsp --client-id=VS-Code --client-version=3.118.2
+    0	    10	 15328	       C:\Windows\system32\conhost.exe 0x4
+    0	     7	 13564	     "C:\Users\NETPIX\AppData\Local\Programs\Microsoft VS Code\Code.exe" "c:\Users\NETPIX\AppData\Local\Programs\Microsoft VS Code\resources\app\extensions\json-language-features\server\dist\node\jsonServerMain" --node-ipc --clientProcessId=9492
+    0	     4	 14024	     C:\FLUTTER\flutter\bin\cache\dart-sdk\bin\dart.exe tooling-daemon --machine
+    0	    15	  8268	       C:\FLUTTER\flutter\bin\cache\dart-sdk\bin\dartaotruntime.exe --new_gen_semi_max_size=32 --new_gen_growth_factor=4 C:\FLUTTER\flutter\bin\cache\dart-sdk\bin\snapshots\dart_tooling_daemon_aot.dart.snapshot --machine
+    0	    10	 12912	       C:\Windows\system32\conhost.exe 0x4
+    0	     2	 20268	     "C:\Program Files\Git\cmd\git.exe" config --get commit.template
+    0	    11	 17540	       C:\Windows\system32\conhost.exe 0x4
+    0	     2	 20300	     "C:\Program Files\Git\cmd\git.exe" for-each-ref --format=%(refname)%00%(upstream:short)%00%(objectname)%00%(upstream:track)%00%(upstream:remotename)%00%(upstream:remoteref) --ignore-case refs/heads/master refs/remotes/master
+    0	     6	 24628	       C:\Windows\system32\conhost.exe 0x4
+    0	    29	 23440	     c:\Users\NETPIX\.vscode\extensions\redhat.java-1.45.0-win32-x64\jre\21.0.8-win32-x86_64\bin\jcmd 11680 VM.uptime
+    0	    11	 21928	       C:\Windows\system32\conhost.exe 0x4
+    0	   141	 10620	   window
+    0	    65	 11788	   
+    0	    13	 12004	file-watcher [1]
+    0	   138	 12500	   window
+    0	    24	 14100	pty-host
+    0	     6	  1324	     conpty-agent
+    0	     4	  9664	     C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command "try { . \"c:\Users\NETPIX\AppData\Local\Programs\Microsoft VS Code\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1\" } catch {}"
+    0	     5	 13304	     C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command "try { . \"c:\Users\NETPIX\AppData\Local\Programs\Microsoft VS Code\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1\" } catch {}"
+    0	    21	 15780	       "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -ExecutionPolicy Bypass -File R:\Codigos\BarbeariaApp\scripts\fix_copilot_restart.ps1
+    0	     5	 15440	         C:\Windows\system32\cmd.exe /c ""C:\Users\NETPIX\AppData\Local\Programs\Microsoft VS Code\bin\code.cmd" --status"
+    0	    58	 26756	           electron-nodejs (cli.js )
+    0	   133	 17164	             "C:\Users\NETPIX\AppData\Local\Programs\Microsoft VS Code\Code.exe" --status
+    0	   102	  7904	               gpu-process
+    0	    88	 15528	               utility-network-service
+    0	    85	 18140	               crashpad-handler
+    0	     6	 14492	     conpty-agent
+    0	     7	 14552	   crashpad-handler
+    0	   146	 15636	   window
+    0	   545	 15792	extension-host [21]
+    0	     2	 14700	     c:\Users\NETPIX\.vscode\extensions\ms-azuretools.vscode-azure-github-copilot-1.0.117-win32-x64\dist\node_modules\aidriver.win-x64\AIServiceLocalPackage.exe --urls=http://pipe:/azcp-8f4f0e521821 --environment=Production
+    0	     2	  9496	       C:\Windows\system32\conhost.exe 0x4
+    1	    62	 27224	     c:\Users\NETPIX\.vscode\extensions\ms-azuretools.vscode-azure-mcp-server-0.8.2-win32-x64\server\azmcp.exe server start --mode namespace
+    0	    11	 27288	       C:\Windows\system32\conhost.exe 0x4
+    0	    45	 27232	     "C:\Program Files\dart-sdk\bin\dart.exe" mcp-server
+    0	    19	 27268	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\dart_mcp_server_aot.dart.snapshot"
+    1	    12	 16696	         "C:\Program Files\dart-sdk\bin\dart.exe" language-server --protocol lsp
+    0	    11	 14328	           C:\Windows\system32\conhost.exe 0x4
+    0	    11	 27296	       C:\Windows\system32\conhost.exe 0x4
+    0	   141	 15908	   window
+    0	    15	 16780	   utility-process
+    0	   144	 16856	   window
+    0	   356	 16872	   utility-process
+    0	     7	 17112	     "C:\Program Files\dart-sdk\bin\dart.exe" mcp-server
+    0	     5	  9012	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\dart_mcp_server_aot.dart.snapshot"
+    0	     7	 16660	         "C:\Program Files\dart-sdk\bin\dart.exe" language-server --protocol lsp
+    0	     2	 16968	           "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\analysis_server_aot.dart.snapshot" --protocol lsp
+    0	     2	 19408	           C:\Windows\system32\conhost.exe 0x4
+    0	     5	 17076	       C:\Windows\system32\conhost.exe 0x4
+    0	    15	 17636	     c:\Users\NETPIX\.vscode\extensions\vscjava.migrate-java-to-azure-1.5.2-win32-x64\out\mcp-server.exe --serverType codetocloud --codeToCloudDeployWorkflowName quickstart --codeToCloudDeployToExistingWorkflowName deploy-to-existing --codeToCloudContainerizationWorkflowName containerization
+    0	    10	 17732	       C:\Windows\system32\conhost.exe 0x4
+    0	    31	 19392	     c:\Users\NETPIX\.vscode\extensions\ms-azuretools.vscode-azure-mcp-server-0.8.2-win32-x64\server\azmcp.exe server start --mode namespace
+    0	     5	 18356	       C:\Windows\system32\conhost.exe 0x4
+    0	    15	 17104	   utility-process
+    0	   109	 18088	   utility-process
+    0	    16	 14032	     c:\Users\NETPIX\.vscode\extensions\vscjava.migrate-java-to-azure-1.5.2-win32-x64\out\mcp-server.exe --serverType codetocloud --codeToCloudDeployWorkflowName quickstart --codeToCloudDeployToExistingWorkflowName deploy-to-existing --codeToCloudContainerizationWorkflowName containerization
+    0	    10	 12024	       C:\Windows\system32\conhost.exe 0x4
+    0	     7	 14976	     "C:\Program Files\dart-sdk\bin\dart.exe" mcp-server
+    0	     5	  6048	       C:\Windows\system32\conhost.exe 0x4
+    0	     5	 16884	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\dart_mcp_server_aot.dart.snapshot"
+    0	     7	 14832	         "C:\Program Files\dart-sdk\bin\dart.exe" language-server --protocol lsp
+    0	     5	 18396	           C:\Windows\system32\conhost.exe 0x4
+    0	     5	 18648	           "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\analysis_server_aot.dart.snapshot" --protocol lsp
+    0	    30	 17332	     c:\Users\NETPIX\.vscode\extensions\ms-azuretools.vscode-azure-mcp-server-0.8.2-win32-x64\server\azmcp.exe server start --mode namespace
+    0	     5	 19208	       C:\Windows\system32\conhost.exe 0x4
+    0	   113	 18096	   window
+    0	   144	 18160	   window
+    0	    46	 18404	   
+    0	    15	 18916	   utility-process
+    0	   540	 19264	extension-host [17]
+    0	     7	 18044	     "C:\Program Files\dart-sdk\bin\dart.exe" language-server --protocol=lsp --client-id=VS-Code --client-version=3.118.2
+    0	    11	 11052	       C:\Windows\system32\conhost.exe 0x4
+    3	   109	 21288	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\analysis_server_aot.dart.snapshot" --protocol=lsp --client-id=VS-Code --client-version=3.118.2
+    0	     7	 19360	     "C:\Program Files\dart-sdk\bin\dart.exe" tooling-daemon --machine
+    0	     8	  4252	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\dart_tooling_daemon_aot.dart.snapshot" --machine
+    0	    11	  8000	       C:\Windows\system32\conhost.exe 0x4
+    0	    68	 19644	     c:\Users\NETPIX\.vscode\extensions\ms-azuretools.vscode-azure-mcp-server-0.8.2-win32-x64\server\azmcp.exe server start --mode namespace
+    0	    10	 22072	       C:\Windows\system32\conhost.exe 0x4
+    0	    23	 23124	     "C:\Program Files\dart-sdk\bin\dart.exe" mcp-server
+    0	    10	 11656	       C:\Windows\system32\conhost.exe 0x4
+    0	    19	 23584	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\dart_mcp_server_aot.dart.snapshot"
+    0	    22	 11720	         "C:\Program Files\dart-sdk\bin\dart.exe" language-server --protocol lsp
+    0	    10	   268	           C:\Windows\system32\conhost.exe 0x4
+    3	   114	 22360	           "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\analysis_server_aot.dart.snapshot" --protocol lsp
+    0	    76	 24556	     c:\Users\NETPIX\.vscode\extensions\ms-azuretools.vscode-azure-github-copilot-1.0.117-win32-x64\dist\node_modules\aidriver.win-x64\AIServiceLocalPackage.exe --urls=http://pipe:/azcp-e9f2a57e33eb --environment=Production
+    0	    10	   276	       C:\Windows\system32\conhost.exe 0x4
+    0	    38	 25220	     electron-nodejs (eslintServer.js )
+    0	    38	 26060	     "C:\Users\NETPIX\AppData\Local\Programs\Microsoft VS Code\Code.exe" "c:\Users\NETPIX\AppData\Local\Programs\Microsoft VS Code\resources\app\extensions\json-language-features\server\dist\node\jsonServerMain" --node-ipc --clientProcessId=19264
+    0	   142	 19636	   window
+    0	    14	 20804	   utility-process
+    0	   133	 21216	   window
+    0	   424	 21696	extension-host [22]
+    5	    37	  8084	     c:\Users\NETPIX\.vscode\extensions\ms-azuretools.vscode-azure-mcp-server-0.8.2-win32-x64\server\azmcp.exe server start --mode namespace
+    0	    11	 27196	       C:\Windows\system32\conhost.exe 0x4
+    0	   106	 13080	     "C:\Program Files\dart-sdk\bin\dart.exe" mcp-server
+    0	    12	 20080	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\dart_mcp_server_aot.dart.snapshot"
+    0	    11	 27372	       C:\Windows\system32\conhost.exe 0x4
+    0	    44	 24884	     "C:\Program Files\dart-sdk\bin\dart.exe" language-server --protocol=lsp --client-id=VS-Code --client-version=3.118.2
+    0	    10	 22764	       C:\Windows\system32\conhost.exe 0x4
+    1	   116	 26612	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\analysis_server_aot.dart.snapshot" --protocol=lsp --client-id=VS-Code --client-version=3.118.2
+    0	   444	 22620	extension-host [23]
+    1	    88	 17684	     "C:\Program Files\dart-sdk\bin\dart.exe" mcp-server
+    0	    11	 16776	       C:\Windows\system32\conhost.exe 0x4
+    0	    44	 17704	     "C:\Program Files\dart-sdk\bin\dart.exe" tooling-daemon --machine
+    0	    15	 11908	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\dart_tooling_daemon_aot.dart.snapshot" --machine
+    0	    10	 24632	       C:\Windows\system32\conhost.exe 0x4
+    0	    47	 25512	     "C:\Program Files\dart-sdk\bin\dart.exe" language-server --protocol=lsp --client-id=VS-Code --client-version=3.118.2
+    1	   115	 20492	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\analysis_server_aot.dart.snapshot" --protocol=lsp --client-id=VS-Code --client-version=3.118.2
+    0	    10	 25636	       C:\Windows\system32\conhost.exe 0x4
+    5	    21	 25776	     c:\Users\NETPIX\.vscode\extensions\ms-azuretools.vscode-azure-mcp-server-0.8.2-win32-x64\server\azmcp.exe server start --mode namespace
+    0	    11	 18424	       C:\Windows\system32\conhost.exe 0x4
+    0	   160	 23104	   window
+    0	   475	 23748	extension-host [24]
+    0	    44	 26152	     "C:\Program Files\dart-sdk\bin\dart.exe" tooling-daemon --machine
+    0	    16	 21028	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\dart_tooling_daemon_aot.dart.snapshot" --machine
+    0	    10	 25740	       C:\Windows\system32\conhost.exe 0x4
+    0	    44	 26504	     "C:\Program Files\dart-sdk\bin\dart.exe" language-server --protocol=lsp --client-id=VS-Code --client-version=3.118.2
+    2	   117	 25084	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\analysis_server_aot.dart.snapshot" --protocol=lsp --client-id=VS-Code --client-version=3.118.2
+    0	    10	 26444	       C:\Windows\system32\conhost.exe 0x4
+    0	    55	 24580	   utility-process
+    9	   388	 24828	extension-host [25]
+    0	   102	 26708	     "C:\Program Files\dart-sdk\bin\dart.exe" language-server --protocol=lsp --client-id=VS-Code --client-version=3.118.2
+    5	     4	 15004	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\analysis_server_aot.dart.snapshot" --protocol=lsp --client-id=VS-Code --client-version=3.118.2
+    0	    11	 25072	       C:\Windows\system32\conhost.exe 0x4
+    0	    47	 26800	     "C:\Program Files\dart-sdk\bin\dart.exe" tooling-daemon --machine
+    0	    16	 13292	       "C:\Program Files\dart-sdk\bin\dartaotruntime.exe" --new_gen_semi_max_size=32 --new_gen_growth_factor=4 "C:\Program Files\dart-sdk\bin\snapshots\dart_tooling_daemon_aot.dart.snapshot" --machine
+    0	    11	 20864	       C:\Windows\system32\conhost.exe 0x4
+    0	   180	 25536	   window
+
+Workspace Stats: 
+|  Window (fix_copilot_restart.ps1 - BarbeariaApp - Visual Studio Code)
+|    Folder (BarbeariaApp): 494 files
+|      File types: png(56) dart(51) md(23) json(20) xml(16) js(13)
+|                  xcconfig(10) h(9) stamp(8) gitignore(8)
+|      Conf files: github-actions(2) cmake(2) copilot-instructions.md(1)
+|                  settings.json(1) tasks.json(1) package.json(1)

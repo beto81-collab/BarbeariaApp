@@ -123,9 +123,9 @@ class InteractiveBackgroundPainter extends CustomPainter {
       end: Alignment(1.0 + 2.0 * shimmerValue, 1.0),
       colors: [
         Colors.transparent,
-        const Color(0xFF1A1A1A).withOpacity(0.3),
-        const Color(0xFF2D2D2D).withOpacity(0.2),
-        const Color(0xFF1A1A1A).withOpacity(0.3),
+        const Color(0xFF1A1A1A).withAlpha((0.3 * 255).round()),
+        const Color(0xFF2D2D2D).withAlpha((0.2 * 255).round()),
+        const Color(0xFF1A1A1A).withAlpha((0.3 * 255).round()),
         Colors.transparent,
       ],
       stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
@@ -160,7 +160,9 @@ class InteractiveBackgroundPainter extends CustomPainter {
 
       // Onda principal
       final ripplePaint = Paint()
-        ..color = const Color(0xFFFFD700).withOpacity(opacity * 0.8)
+        ..color = const Color(
+          0xFFFFD700,
+        ).withAlpha((opacity * 0.8 * 255).round())
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.0;
 
@@ -170,7 +172,9 @@ class InteractiveBackgroundPainter extends CustomPainter {
       if (progress > 0.3) {
         final secondaryRadius = (progress - 0.3) * 60;
         final secondaryPaint = Paint()
-          ..color = const Color(0xFFFFFFFF).withOpacity(opacity * 0.4)
+          ..color = const Color(
+            0xFFFFFFFF,
+          ).withAlpha((opacity * 0.4 * 255).round())
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.0;
 
@@ -189,7 +193,9 @@ class InteractiveBackgroundPainter extends CustomPainter {
     double opacity,
   ) {
     final particlePaint = Paint()
-      ..color = const Color(0xFFFFD700).withOpacity(opacity * 0.7);
+      ..color = const Color(
+        0xFFFFD700,
+      ).withAlpha((opacity * 0.7 * 255).round());
 
     for (int i = 0; i < 8; i++) {
       final angle = (i * math.pi * 2) / 8;

@@ -22,6 +22,18 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
       initialDate: _dataSelecionada,
       firstDate: DateTime(1900),
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (data != null) {
       setState(() => _dataSelecionada = data);

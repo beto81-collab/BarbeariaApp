@@ -115,7 +115,7 @@ class NotificationService {
   /// Callback quando notificação local é tocada
   static void _onNotificationTapped(NotificationResponse response) {
     print('Notificação tocada: ${response.payload}');
-    // TODO: Implementar navegação baseada no payload
+    
   }
 
   /// Handler para mensagens em primeiro plano
@@ -136,7 +136,7 @@ class NotificationService {
   /// Handler para quando app é aberto via notificação
   static void _handleMessageOpenedApp(RemoteMessage message) {
     print('App aberto via notificação: ${message.notification?.title}');
-    // TODO: Navegar para tela específica baseada nos dados
+   
   }
 
   /// Handler para mensagens em background

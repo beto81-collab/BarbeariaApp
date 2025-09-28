@@ -4,6 +4,8 @@ class Promocao {
   final String descricao;
   final double desconto;
   final DateTime? validade;
+  final String? produtoId; // opcional: se a promoção for de produto
+  final String? servicoId; // opcional: se a promoção for de serviço
 
   Promocao({
     required this.id,
@@ -11,6 +13,8 @@ class Promocao {
     required this.descricao,
     required this.desconto,
     this.validade,
+    this.produtoId,
+    this.servicoId,
   });
 
   Map<String, dynamic> toJson() => {
@@ -19,6 +23,8 @@ class Promocao {
     'descricao': descricao,
     'desconto': desconto,
     'validade': validade?.toIso8601String(),
+    'produtoId': produtoId,
+    'servicoId': servicoId,
   };
 
   factory Promocao.fromJson(Map<String, dynamic> json) => Promocao(
@@ -29,5 +35,7 @@ class Promocao {
     validade: json['validade'] != null && json['validade'] != ''
         ? DateTime.parse(json['validade'])
         : null,
+    produtoId: json['produtoId'] as String?,
+    servicoId: json['servicoId'] as String?,
   );
 }

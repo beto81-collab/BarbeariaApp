@@ -46,7 +46,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withAlpha((0.1 * 255).round()),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -100,7 +100,9 @@ class _UpdateScreenState extends State<UpdateScreen> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.secondaryColor.withOpacity(0.1),
+                              color: AppTheme.secondaryColor.withAlpha(
+                                (0.1 * 255).round(),
+                              ),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(

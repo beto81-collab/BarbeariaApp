@@ -55,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // HACK TEMPORÁRIO: Verificação direta para admin na web
+     
       final email = _emailController.text.trim();
       final senha = _senhaController.text;
 

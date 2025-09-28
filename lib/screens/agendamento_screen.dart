@@ -118,17 +118,20 @@ class _AgendamentoScreenState extends State<AgendamentoScreen> {
   }
 
   Future<void> _selecionarData() async {
-    final DateTime? picked = await showDatePicker(
+    final data = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().add(const Duration(days: 1)),
+      initialDate: DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 30)),
-      builder: (context, child) {
+      lastDate: DateTime(2100),
+      confirmText: 'OK', // ou '' / ' ' conforme preferir
+      builder: (ctx, child) {
+        final base = Theme.of(ctx);
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppTheme.secondaryColor,
-              surface: AppTheme.surfaceColor,
+          data: base.copyWith(
+            textButtonTheme: TextButtonThemeData(
+              style: ButtonStyle(
+                foregroundColor: MaterialStateProperty.all(Colors.white),
+              ),
             ),
           ),
           child: child!,
@@ -136,9 +139,9 @@ class _AgendamentoScreenState extends State<AgendamentoScreen> {
       },
     );
 
-    if (picked != null) {
+    if (data != null) {
       setState(() {
-        _dataSelecionada = picked;
+        _dataSelecionada = data;
         _horarioSelecionado = null; // Reset horário quando muda data
       });
     }

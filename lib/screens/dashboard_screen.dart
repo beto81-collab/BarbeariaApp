@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/logo_corte_real.dart';
 import '../services/firebase_service.dart';
+import 'produtos_cliente_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -38,7 +39,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _mostrarPopupAniversario(usuario.presenteAniversario!);
       }
     } catch (e) {
-      print('Erro ao verificar presente de aniversário: $e');
+      debugPrint('Erro ao verificar presente de aniversário: $e');
     }
   }
 
@@ -165,6 +166,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ElevatedButton(
             onPressed: () async {
               await _resgatarPresente();
+              if (!mounted) return;
               Navigator.of(context).pop();
             },
             child: const Text('Resgatar presente!'),
@@ -198,6 +200,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erro ao resgatar presente: $e'),
@@ -222,7 +225,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      body: IndexedStack(index: _selectedIndex, children: [_buildConfigTab()]),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          _buildHomeTab(),
+          const ProdutosClienteScreen(),
+          _buildConfigTab(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
@@ -232,6 +242,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           });
         },
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Início'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_bag),
+            label: 'Produtos',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Configurações',
@@ -241,17 +256,102 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildConfigTab() {
+  Widget _buildHomeTab() {
     return Center(
-      child: IconButton(
-        icon: const Icon(
-          Icons.settings,
-          size: 64,
-          color: AppTheme.subTextColor,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const LogoCorteReal(size: 120),
+          const SizedBox(height: 24),
+          Text(
+            'Bem-vindo à CORTE REAL!',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.primaryColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Explore nossos produtos e serviços',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: AppTheme.subTextColor),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConfigTab() {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          const SizedBox(height: 32),
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text('Meu Perfil'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              // Navegar para perfil do usuário
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.schedule),
+            title: const Text('Meus Agendamentos'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              // Navegar para agendamentos
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.contact_phone),
+            title: const Text('Contato'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              // Mostrar informações de contato
+              _mostrarContato();
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.exit_to_app),
+            title: const Text('Sair'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              await FirebaseService.logout();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _mostrarContato() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Contato'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('📞 Telefone: (11) 99999-9999'),
+            SizedBox(height: 8),
+            Text('📧 E-mail: contato@cortereal.com.br'),
+            SizedBox(height: 8),
+            Text('📍 Endereço: Rua Exemplo, 123'),
+            Text('   Centro - São Paulo/SP'),
+          ],
         ),
-        onPressed: () {
-          // Ação de configuração
-        },
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fechar'),
+          ),
+        ],
       ),
     );
   }
