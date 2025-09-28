@@ -206,6 +206,36 @@ class FirebaseService {
     }
   }
 
+  /// Faz upload de uma imagem de promoção (arquivo) para o Firebase Storage e retorna a URL pública
+  static Future<String> uploadImagemPromocao(File imagemFile) async {
+    try {
+      final fileName =
+          'promocoes/images/${DateTime.now().millisecondsSinceEpoch}_${imagemFile.path.split(Platform.pathSeparator).last}';
+      final ref = FirebaseStorage.instance.ref().child(fileName);
+      final uploadTask = await ref.putFile(imagemFile);
+      final url = await uploadTask.ref.getDownloadURL();
+      return url;
+    } catch (e) {
+      print('Erro ao fazer upload da imagem da promoção: $e');
+      rethrow;
+    }
+  }
+
+  /// Faz upload de uma imagem de promoção usando bytes (para Flutter Web) e retorna a URL pública
+  static Future<String> uploadImagemPromocaoBytes(Uint8List imageBytes) async {
+    try {
+      final fileName =
+          'promocoes/images/${DateTime.now().millisecondsSinceEpoch}_promocao.jpg';
+      final ref = FirebaseStorage.instance.ref().child(fileName);
+      final uploadTask = await ref.putData(imageBytes);
+      final url = await uploadTask.ref.getDownloadURL();
+      return url;
+    } catch (e) {
+      print('Erro ao fazer upload da imagem da promoção (bytes): $e');
+      rethrow;
+    }
+  }
+
   // ==================== ATUALIZAÇÕES ====================
   static const String _configCollection = 'config';
   static const String _appVersionDoc = 'app_version';
@@ -241,45 +271,109 @@ class FirebaseService {
 
   static Future<String> criarPromocao(Promocao promocao) async {
     try {
-      // Preparar dados e tentar anexar imagem do produto se houver produtoId
+      // Preparar dados para Firestore (inclui valor original do serviço/produto se referenciado)
       final Map<String, dynamic> docData = Map<String, dynamic>.from(
         promocao.toJson(),
       );
-      if (docData['produtoId'] != null &&
-          (docData['imagem'] == null ||
-              (docData['imagem'] as String).isEmpty)) {
+
+      // Se houver servicoId e não houver valorOriginal, buscar o valor do serviço
+      if (docData['servicoId'] != null &&
+          (docData['valorOriginal'] == null ||
+              docData['valorOriginal'].toString().isEmpty)) {
         try {
-          final prodDoc = await _firestore
-              .collection(_productsCollection)
-              .doc(docData['produtoId'])
-              .get();
-          if (prodDoc.exists && prodDoc.data() != null) {
-            final foto = (prodDoc.data()!['foto'] as String?) ?? '';
-            if (foto.isNotEmpty) {
-              try {
-                if (foto.startsWith('gs://') ||
-                    foto.contains('storage.googleapis.com')) {
-                  final ref = FirebaseStorage.instance.refFromURL(foto);
-                  docData['imagem'] = await ref.getDownloadURL();
-                } else if (foto.startsWith('http')) {
-                  docData['imagem'] = foto;
-                } else {
-                  // caminho de asset (ex: assets/...) — não é possível enviar automaticamente
-                  // podemos logar para revisão manual
-                  print('Produto com foto em asset ou caminho não-http: $foto');
-                }
-              } catch (e) {
-                print('Aviso: falha ao resolver URL da foto do produto: $e');
-              }
+          final servRef = _firestore
+              .collection('servicos')
+              .doc(docData['servicoId']);
+          final servSnap = await servRef.get();
+          if (servSnap.exists && servSnap.data() != null) {
+            final serv = servSnap.data()!;
+            // campos comuns esperados: 'valor', 'titulo', 'descricao', 'tempo'
+            if (serv['valor'] != null) {
+              final valor = (serv['valor'] is num)
+                  ? (serv['valor'] as num).toDouble()
+                  : double.tryParse(serv['valor'].toString());
+              if (valor != null)
+                docData['valorOriginal'] = double.parse(
+                  valor.toStringAsFixed(2),
+                );
             }
+            docData['servicoTitulo'] =
+                serv['titulo'] ?? serv['nome'] ?? docData['titulo'];
+            docData['servicoDescricao'] = serv['descricao'] ?? '';
+            docData['servicoTempo'] = serv['tempo'] ?? serv['duracao'] ?? '';
           }
         } catch (e) {
-          print('Aviso: falha ao buscar produto para obter foto: $e');
+          print('Aviso: falha ao obter dados do serviço para promoção: $e');
         }
       }
+
+      // Se houver produtoId e não houver valorOriginal, buscar o valor do produto
+      if (docData['produtoId'] != null &&
+          (docData['valorOriginal'] == null ||
+              docData['valorOriginal'].toString().isEmpty)) {
+        try {
+          final prodRef = _firestore
+              .collection('produtos')
+              .doc(docData['produtoId']);
+          final prodSnap = await prodRef.get();
+          if (prodSnap.exists && prodSnap.data() != null) {
+            final prod = prodSnap.data()!;
+            if (prod['valor'] != null) {
+              final valor = (prod['valor'] is num)
+                  ? (prod['valor'] as num).toDouble()
+                  : double.tryParse(prod['valor'].toString());
+              if (valor != null)
+                docData['valorOriginal'] = double.parse(
+                  valor.toStringAsFixed(2),
+                );
+            }
+            docData['produtoTitulo'] =
+                prod['titulo'] ?? prod['nome'] ?? docData['titulo'];
+            docData['produtoDescricao'] = prod['descricao'] ?? '';
+          }
+        } catch (e) {
+          print('Aviso: falha ao obter dados do produto para promoção: $e');
+        }
+      }
+
+      // Calcular valor com desconto se possível
+      if (docData['valorOriginal'] != null && docData['desconto'] != null) {
+        try {
+          final double valor = (docData['valorOriginal'] is num)
+              ? (docData['valorOriginal'] as num).toDouble()
+              : double.parse(docData['valorOriginal'].toString());
+          final double perc = (docData['desconto'] is num)
+              ? (docData['desconto'] as num).toDouble()
+              : double.parse(docData['desconto'].toString());
+          final double valorCom = (valor * (1 - (perc / 100)));
+          docData['valorComDesconto'] = double.parse(
+            valorCom.toStringAsFixed(2),
+          );
+        } catch (e) {
+          print('Aviso: falha ao calcular valor com desconto: $e');
+        }
+      }
+
+      // Mantém comportamento anterior de envio de imagemLocalPath se existir
+      if (docData['imagemLocalPath'] != null &&
+          docData['imagemLocalPath'] is String) {
+        try {
+          final path = docData['imagemLocalPath'] as String;
+          final file = File(path);
+          if (await file.exists()) {
+            final url = await uploadImagemPromocao(file);
+            docData['imagem'] = url;
+          }
+        } catch (e) {
+          print('Aviso: falha ao enviar imagem da promoção: $e');
+        }
+        docData.remove('imagemLocalPath');
+      }
+
       final doc = await _firestore
           .collection(_promocoesCollection)
           .add(docData);
+
       // Também salvar uma cópia JSON no Firebase Storage em 'promocoes/{id}.json'
       try {
         final id = doc.id;
@@ -296,7 +390,6 @@ class FirebaseService {
           SettableMetadata(contentType: 'application/json'),
         );
       } catch (e) {
-        // Não bloquear a criação se o upload falhar; apenas logar
         print('Aviso: falha ao salvar promoção no Storage: $e');
       }
 
@@ -310,46 +403,107 @@ class FirebaseService {
 
   static Future<void> atualizarPromocao(Promocao promocao) async {
     try {
-      // Preparar dados de update e tentar anexar imagem do produto se houver produtoId
       final Map<String, dynamic> updateData = Map<String, dynamic>.from(
         promocao.toJson(),
       );
-      if (updateData['produtoId'] != null &&
-          (updateData['imagem'] == null ||
-              (updateData['imagem'] as String).isEmpty)) {
+
+      // Preencher valor original do serviço/produto se necessário (mesma lógica do criar)
+      if (updateData['servicoId'] != null &&
+          (updateData['valorOriginal'] == null ||
+              updateData['valorOriginal'].toString().isEmpty)) {
         try {
-          final prodDoc = await _firestore
-              .collection(_productsCollection)
-              .doc(updateData['produtoId'])
-              .get();
-          if (prodDoc.exists && prodDoc.data() != null) {
-            final foto = (prodDoc.data()!['foto'] as String?) ?? '';
-            if (foto.isNotEmpty) {
-              try {
-                if (foto.startsWith('gs://') ||
-                    foto.contains('storage.googleapis.com')) {
-                  final ref = FirebaseStorage.instance.refFromURL(foto);
-                  updateData['imagem'] = await ref.getDownloadURL();
-                } else if (foto.startsWith('http')) {
-                  updateData['imagem'] = foto;
-                } else {
-                  print('Produto com foto em asset ou caminho não-http: $foto');
-                }
-              } catch (e) {
-                print(
-                  'Aviso: falha ao resolver URL da foto do produto (update): $e',
+          final servRef = _firestore
+              .collection('servicos')
+              .doc(updateData['servicoId']);
+          final servSnap = await servRef.get();
+          if (servSnap.exists && servSnap.data() != null) {
+            final serv = servSnap.data()!;
+            if (serv['valor'] != null) {
+              final valor = (serv['valor'] is num)
+                  ? (serv['valor'] as num).toDouble()
+                  : double.tryParse(serv['valor'].toString());
+              if (valor != null)
+                updateData['valorOriginal'] = double.parse(
+                  valor.toStringAsFixed(2),
                 );
-              }
             }
+            updateData['servicoTitulo'] =
+                serv['titulo'] ?? serv['nome'] ?? updateData['titulo'];
+            updateData['servicoDescricao'] = serv['descricao'] ?? '';
+            updateData['servicoTempo'] = serv['tempo'] ?? serv['duracao'] ?? '';
           }
         } catch (e) {
-          print('Aviso: falha ao buscar produto para obter foto (update): $e');
+          print('Aviso: falha ao obter dados do serviço (update): $e');
         }
       }
+
+      if (updateData['produtoId'] != null &&
+          (updateData['valorOriginal'] == null ||
+              updateData['valorOriginal'].toString().isEmpty)) {
+        try {
+          final prodRef = _firestore
+              .collection('produtos')
+              .doc(updateData['produtoId']);
+          final prodSnap = await prodRef.get();
+          if (prodSnap.exists && prodSnap.data() != null) {
+            final prod = prodSnap.data()!;
+            if (prod['valor'] != null) {
+              final valor = (prod['valor'] is num)
+                  ? (prod['valor'] as num).toDouble()
+                  : double.tryParse(prod['valor'].toString());
+              if (valor != null)
+                updateData['valorOriginal'] = double.parse(
+                  valor.toStringAsFixed(2),
+                );
+            }
+            updateData['produtoTitulo'] =
+                prod['titulo'] ?? prod['nome'] ?? updateData['titulo'];
+            updateData['produtoDescricao'] = prod['descricao'] ?? '';
+          }
+        } catch (e) {
+          print('Aviso: falha ao obter dados do produto (update): $e');
+        }
+      }
+
+      // recalcula valor com desconto se possível
+      if (updateData['valorOriginal'] != null &&
+          updateData['desconto'] != null) {
+        try {
+          final double valor = (updateData['valorOriginal'] is num)
+              ? (updateData['valorOriginal'] as num).toDouble()
+              : double.parse(updateData['valorOriginal'].toString());
+          final double perc = (updateData['desconto'] is num)
+              ? (updateData['desconto'] as num).toDouble()
+              : double.parse(updateData['desconto'].toString());
+          final double valorCom = (valor * (1 - (perc / 100)));
+          updateData['valorComDesconto'] = double.parse(
+            valorCom.toStringAsFixed(2),
+          );
+        } catch (e) {
+          print('Aviso: falha ao recalcular valor com desconto (update): $e');
+        }
+      }
+
+      if (updateData['imagemLocalPath'] != null &&
+          updateData['imagemLocalPath'] is String) {
+        try {
+          final path = updateData['imagemLocalPath'] as String;
+          final file = File(path);
+          if (await file.exists()) {
+            final url = await uploadImagemPromocao(file);
+            updateData['imagem'] = url;
+          }
+        } catch (e) {
+          print('Aviso: falha ao enviar imagem da promoção (update): $e');
+        }
+        updateData.remove('imagemLocalPath');
+      }
+
       await _firestore
           .collection(_promocoesCollection)
           .doc(promocao.id)
           .update(updateData);
+
       // Atualizar a cópia JSON no Firebase Storage também
       try {
         final Map<String, dynamic> dataToSave = {
