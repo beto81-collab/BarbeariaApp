@@ -785,6 +785,30 @@ class FirebaseService {
     return null;
   }
 
+  /// Obtém um usuário por id
+  static Future<Usuario?> obterUsuarioPorId(String usuarioId) async {
+    try {
+      final doc = await _firestore.collection(_usersCollection).doc(usuarioId).get();
+      if (!doc.exists || doc.data() == null) return null;
+      return Usuario.fromJson({...doc.data()!, 'id': doc.id});
+    } catch (e) {
+      print('Erro ao obter usuário por id: $e');
+      return null;
+    }
+  }
+
+  /// Obtém um serviço por id
+  static Future<Servico?> obterServicoPorId(String servicoId) async {
+    try {
+      final doc = await _firestore.collection(_servicesCollection).doc(servicoId).get();
+      if (!doc.exists || doc.data() == null) return null;
+      return Servico.fromJson({...doc.data()!, 'id': doc.id});
+    } catch (e) {
+      print('Erro ao obter serviço por id: $e');
+      return null;
+    }
+  }
+
   /// Atualiza dados do usuário
   static Future<void> atualizarUsuario(Usuario usuario) async {
     try {
@@ -913,6 +937,18 @@ class FirebaseService {
       print('Erro ao obter todos os agendamentos: $e');
       return [];
     }
+  }
+
+  /// Stream de agendamentos pendentes (para administradores)
+  static Stream<List<Agendamento>> streamAgendamentosPendentes() {
+    return _firestore
+        .collection(_appointmentsCollection)
+        .where('status', isEqualTo: StatusAgendamento.agendado.name)
+        .orderBy('dataHora', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Agendamento.fromJson({...doc.data(), 'id': doc.id}))
+            .toList());
   }
 
   /// Altera o status de um agendamento (para administradores)
