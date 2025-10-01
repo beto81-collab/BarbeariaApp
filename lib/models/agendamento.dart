@@ -7,6 +7,8 @@ class Agendamento {
   final StatusAgendamento status;
   final String observacoes;
   final double valor;
+  final String? clienteNome;
+  final String? servicoNome;
 
   const Agendamento({
     required this.id,
@@ -17,6 +19,8 @@ class Agendamento {
     required this.status,
     this.observacoes = '',
     required this.valor,
+    this.clienteNome,
+    this.servicoNome,
   });
 
   Map<String, dynamic> toJson() {
@@ -30,6 +34,8 @@ class Agendamento {
       'status': status.name,
       'observacoes': observacoes,
       'valor': valor,
+      'clienteNome': clienteNome,
+      'servicoNome': servicoNome,
     };
   }
 
@@ -49,6 +55,8 @@ class Agendamento {
       ),
       observacoes: json['observacoes'] as String? ?? '',
       valor: (json['valor'] as num).toDouble(),
+      clienteNome: json['clienteNome'] as String?,
+      servicoNome: json['servicoNome'] as String?,
     );
   }
 

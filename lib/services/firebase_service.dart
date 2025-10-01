@@ -941,14 +941,14 @@ class FirebaseService {
 
   /// Stream de agendamentos pendentes (para administradores)
   static Stream<List<Agendamento>> streamAgendamentosPendentes() {
-    return _firestore
-        .collection(_appointmentsCollection)
-        .where('status', isEqualTo: StatusAgendamento.agendado.name)
-        .orderBy('dataHora', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Agendamento.fromJson({...doc.data(), 'id': doc.id}))
-            .toList());
+  return _firestore
+    .collection(_appointmentsCollection)
+    .where('status', whereIn: ['pendente', StatusAgendamento.agendado.name])
+    .orderBy('dataHora', descending: true)
+    .snapshots()
+    .map((snapshot) => snapshot.docs
+      .map((doc) => Agendamento.fromJson({...doc.data(), 'id': doc.id}))
+      .toList());
   }
 
   /// Altera o status de um agendamento (para administradores)

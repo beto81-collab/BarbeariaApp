@@ -51,12 +51,15 @@ class _AdminAgendamentosScreenState extends State<AdminAgendamentosScreen> {
             itemBuilder: (context, index) {
               final a = agendamentos[index];
 
-              // Request names if missing
-              _ensureClienteNome(a.clienteId);
-              _ensureServicoNome(a.servicoId);
+              // Prioriza nomes denormalizados no documento, senão usa cache/service
+              final clienteNomeDoc = a.clienteNome;
+              final servicoNomeDoc = a.servicoNome;
 
-              final clienteNome = _clienteNomes[a.clienteId] ?? a.clienteId;
-              final servicoNome = _servicoNomes[a.servicoId] ?? a.servicoId;
+              if (clienteNomeDoc == null) _ensureClienteNome(a.clienteId);
+              if (servicoNomeDoc == null) _ensureServicoNome(a.servicoId);
+
+              final clienteNome = clienteNomeDoc ?? _clienteNomes[a.clienteId] ?? a.clienteId;
+              final servicoNome = servicoNomeDoc ?? _servicoNomes[a.servicoId] ?? a.servicoId;
 
               return Card(
                 child: ListTile(
