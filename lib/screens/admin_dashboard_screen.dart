@@ -5,6 +5,7 @@ import '../services/firebase_service.dart';
 import 'produtos_screen.dart';
 import 'servicos_screen.dart';
 import 'agendamento_screen.dart';
+import 'admin_agendamentos_screen.dart';
 import 'horarios_screen.dart';
 import 'atualizacoes_screen.dart';
 import 'backup_screen.dart';
@@ -79,7 +80,9 @@ class AdminDashboardScreen extends StatelessWidget {
               label: 'Agendamentos',
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const AgendamentoScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const AdminAgendamentosScreen(),
+                ),
               ),
             ),
             _AdminTile(

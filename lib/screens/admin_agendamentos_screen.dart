@@ -7,7 +7,8 @@ class AdminAgendamentosScreen extends StatefulWidget {
   const AdminAgendamentosScreen({super.key});
 
   @override
-  State<AdminAgendamentosScreen> createState() => _AdminAgendamentosScreenState();
+  State<AdminAgendamentosScreen> createState() =>
+      _AdminAgendamentosScreenState();
 }
 
 class _AdminAgendamentosScreenState extends State<AdminAgendamentosScreen> {
@@ -37,8 +38,12 @@ class _AdminAgendamentosScreenState extends State<AdminAgendamentosScreen> {
         stream: FirebaseService.streamAgendamentosPendentes(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            print('Erro no stream de agendamentos pendentes: ${snapshot.error}');
-            return Center(child: Text('Erro ao carregar agendamentos: ${snapshot.error}'));
+            print(
+              'Erro no stream de agendamentos pendentes: ${snapshot.error}',
+            );
+            return Center(
+              child: Text('Erro ao carregar agendamentos: ${snapshot.error}'),
+            );
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -46,16 +51,32 @@ class _AdminAgendamentosScreenState extends State<AdminAgendamentosScreen> {
           }
 
           final agendamentos = snapshot.data ?? [];
-          print('Stream agendamentos pendentes - documentos recebidos: ${agendamentos.length}');
+          print(
+            'Stream agendamentos pendentes - documentos recebidos: ${agendamentos.length}',
+          );
 
           if (agendamentos.isEmpty) {
             return FutureBuilder<List<Agendamento>>(
-              future: FirebaseService.obterTodosAgendamentos().then((list) => list.where((a) => (a.status.name == 'pendente' || a.status == StatusAgendamento.agendado)).toList()),
+              future: FirebaseService.obterTodosAgendamentos().then(
+                (list) => list
+                    .where(
+                      (a) =>
+                          (a.status.name == 'pendente' ||
+                          a.status == StatusAgendamento.agendado),
+                    )
+                    .toList(),
+              ),
               builder: (context, snap2) {
-                if (snap2.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+                if (snap2.connectionState == ConnectionState.waiting)
+                  return const Center(child: CircularProgressIndicator());
                 final fallback = snap2.data ?? [];
-                print('Fallback obteve agendamentos pendentes: ${fallback.length}');
-                if (fallback.isEmpty) return const Center(child: Text('Nenhum agendamento pendente'));
+                print(
+                  'Fallback obteve agendamentos pendentes: ${fallback.length}',
+                );
+                if (fallback.isEmpty)
+                  return const Center(
+                    child: Text('Nenhum agendamento pendente'),
+                  );
                 return _buildListView(fallback);
               },
             );
@@ -81,8 +102,10 @@ class _AdminAgendamentosScreenState extends State<AdminAgendamentosScreen> {
         if (clienteNomeDoc == null) _ensureClienteNome(a.clienteId);
         if (servicoNomeDoc == null) _ensureServicoNome(a.servicoId);
 
-        final clienteNome = clienteNomeDoc ?? _clienteNomes[a.clienteId] ?? a.clienteId;
-        final servicoNome = servicoNomeDoc ?? _servicoNomes[a.servicoId] ?? a.servicoId;
+        final clienteNome =
+            clienteNomeDoc ?? _clienteNomes[a.clienteId] ?? a.clienteId;
+        final servicoNome =
+            servicoNomeDoc ?? _servicoNomes[a.servicoId] ?? a.servicoId;
 
         return Card(
           child: ListTile(
@@ -95,16 +118,59 @@ class _AdminAgendamentosScreenState extends State<AdminAgendamentosScreen> {
                   icon: const Icon(Icons.check, color: Colors.green),
                   tooltip: 'Confirmar',
                   onPressed: () async {
-                    await FirebaseService.alterarStatusAgendamento(a.id, StatusAgendamento.concluido);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Agendamento confirmado')));
+                    await FirebaseService.alterarStatusAgendamento(
+                      a.id,
+                      StatusAgendamento.concluido,
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Agendamento confirmado')),
+                    );
                   },
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.red),
                   tooltip: 'Cancelar',
                   onPressed: () async {
-                    await FirebaseService.alterarStatusAgendamento(a.id, StatusAgendamento.cancelado);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Agendamento cancelado')));
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Confirmar exclusão'),
+                        content: const Text(
+                          'Deseja remover este agendamento permanentemente do sistema?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(false),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Cancelar'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(true),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Remover'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true) {
+                      try {
+                        await FirebaseService.removerAgendamento(a.id);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Agendamento removido')),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Erro ao remover agendamento'),
+                          ),
+                        );
+                      }
+                    }
                   },
                 ),
               ],

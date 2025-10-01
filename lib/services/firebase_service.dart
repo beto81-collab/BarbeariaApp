@@ -788,7 +788,10 @@ class FirebaseService {
   /// Obtém um usuário por id
   static Future<Usuario?> obterUsuarioPorId(String usuarioId) async {
     try {
-      final doc = await _firestore.collection(_usersCollection).doc(usuarioId).get();
+      final doc = await _firestore
+          .collection(_usersCollection)
+          .doc(usuarioId)
+          .get();
       if (!doc.exists || doc.data() == null) return null;
       return Usuario.fromJson({...doc.data()!, 'id': doc.id});
     } catch (e) {
@@ -800,7 +803,10 @@ class FirebaseService {
   /// Obtém um serviço por id
   static Future<Servico?> obterServicoPorId(String servicoId) async {
     try {
-      final doc = await _firestore.collection(_servicesCollection).doc(servicoId).get();
+      final doc = await _firestore
+          .collection(_servicesCollection)
+          .doc(servicoId)
+          .get();
       if (!doc.exists || doc.data() == null) return null;
       return Servico.fromJson({...doc.data()!, 'id': doc.id});
     } catch (e) {
@@ -835,6 +841,26 @@ class FirebaseService {
       BackupAutoConfig.houveAlteracao = true;
     } catch (e) {
       print('Erro ao atualizar presente de aniversário: $e');
+      rethrow;
+    }
+  }
+
+  /// Marca o presente de aniversário como entregue pelo admin (campo entregue=true)
+  static Future<void> marcarPresenteComoEntregue(String usuarioId) async {
+    try {
+      final docRef = _firestore.collection(_usersCollection).doc(usuarioId);
+      final doc = await docRef.get();
+      if (!doc.exists || doc.data() == null) return;
+      final data = {...doc.data()!};
+      final presente = Map<String, dynamic>.from(
+        data['presenteAniversario'] ?? {},
+      );
+      presente['entregue'] = true;
+      presente['entregueEm'] = DateTime.now().toIso8601String();
+      await docRef.update({'presenteAniversario': presente});
+      BackupAutoConfig.houveAlteracao = true;
+    } catch (e) {
+      print('Erro ao marcar presente como entregue: $e');
       rethrow;
     }
   }
@@ -922,6 +948,20 @@ class FirebaseService {
     }
   }
 
+  /// Remove um agendamento do Firestore (exclusão permanente)
+  static Future<void> removerAgendamento(String agendamentoId) async {
+    try {
+      await _firestore
+          .collection(_appointmentsCollection)
+          .doc(agendamentoId)
+          .delete();
+      BackupAutoConfig.houveAlteracao = true;
+    } catch (e) {
+      print('Erro ao remover agendamento: $e');
+      rethrow;
+    }
+  }
+
   /// Obtém todos os agendamentos (para administradores)
   static Future<List<Agendamento>> obterTodosAgendamentos() async {
     try {
@@ -941,21 +981,41 @@ class FirebaseService {
 
   /// Stream de agendamentos pendentes (para administradores)
   static Stream<List<Agendamento>> streamAgendamentosPendentes() {
-  return _firestore
-      .collection(_appointmentsCollection)
-      .orderBy('dataHora', descending: true)
-      .snapshots()
-      .map((snapshot) {
-    final list = <Agendamento>[];
-    for (final doc in snapshot.docs) {
-      final raw = doc.data();
-      final statusRaw = raw['status'] as String? ?? '';
-      if (statusRaw == 'pendente' || statusRaw == StatusAgendamento.agendado.name) {
-        list.add(Agendamento.fromJson({...raw, 'id': doc.id}));
-      }
-    }
-    return list;
-  });
+    return _firestore
+        .collection(_appointmentsCollection)
+        .orderBy('dataHora', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          final list = <Agendamento>[];
+          for (final doc in snapshot.docs) {
+            final raw = doc.data();
+            try {
+              // Tolerância ao tipo de 'status' vindo do Firestore (pode ser String ou null)
+              final dynamic statusField = raw['status'];
+              final statusRaw = statusField is String
+                  ? statusField
+                  : (statusField?.toString() ?? '');
+
+              if (statusRaw == 'pendente' ||
+                  statusRaw == StatusAgendamento.agendado.name) {
+                try {
+                  final ag = Agendamento.fromJson({...raw, 'id': doc.id});
+                  list.add(ag);
+                } catch (e) {
+                  // Logar e continuar com os demais documentos
+                  print('Erro ao desserializar agendamento id=${doc.id}: $e');
+                  print('Dados do documento: ${raw}');
+                }
+              }
+            } catch (e) {
+              print(
+                'Erro ao processar documento de agendamento id=${doc.id}: $e',
+              );
+              print('raw data: ${raw}');
+            }
+          }
+          return list;
+        });
   }
 
   /// Altera o status de um agendamento (para administradores)

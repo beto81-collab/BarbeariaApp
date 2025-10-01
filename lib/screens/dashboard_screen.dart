@@ -34,9 +34,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
 
       // Verificar se tem presente pendente
-      if (usuario.presenteAniversario != null &&
-          usuario.presenteAniversario!['resgatado'] != true) {
-        _mostrarPopupAniversario(usuario.presenteAniversario!);
+      if (usuario.presenteAniversario != null) {
+        final presente = usuario.presenteAniversario!;
+        final resgatado = presente['resgatado'] == true;
+        final entregue = presente['entregue'] == true;
+        // checar expiração se existe
+        bool dentroPrazo = true;
+        if (presente['expiraEm'] != null) {
+          try {
+            final exp = presente['expiraEm'];
+            DateTime expDate;
+            // Caso venha como string ISO
+            if (exp is String) {
+              expDate = DateTime.parse(exp);
+            } else if (exp != null &&
+                exp is Map<String, dynamic> &&
+                (exp['_seconds'] != null || exp['seconds'] != null)) {
+              // Timestamp serializado como map vindo do build/web
+              final seconds = exp['_seconds'] ?? exp['seconds'];
+              expDate = DateTime.fromMillisecondsSinceEpoch(
+                (seconds as int) * 1000,
+              );
+            } else if (exp != null && exp is DateTime) {
+              expDate = exp;
+            } else if (exp != null && exp is num) {
+              expDate = DateTime.fromMillisecondsSinceEpoch(exp.toInt());
+            } else {
+              expDate = DateTime.parse(exp.toString());
+            }
+            dentroPrazo = DateTime.now().isBefore(expDate);
+          } catch (e) {
+            dentroPrazo = true;
+          }
+        }
+
+        if (!resgatado && !entregue && dentroPrazo) {
+          _mostrarPopupAniversario(presente);
+        }
       }
     } catch (e) {
       debugPrint('Erro ao verificar presente de aniversário: $e');
@@ -186,7 +220,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         usuario.presenteAniversario!,
       );
       presenteAtualizado['resgatado'] = true;
-      presenteAtualizado['resgatadoEm'] = DateTime.now();
+      presenteAtualizado['resgatadoEm'] = DateTime.now().toIso8601String();
 
       await FirebaseService.atualizarPresenteAniversario(
         usuario.id,

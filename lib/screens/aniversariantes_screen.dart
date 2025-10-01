@@ -4,6 +4,8 @@ import '../models/produto.dart';
 import '../models/servico.dart';
 import '../services/firebase_service.dart';
 
+enum FilterOpcao { todos, pendentes, expirados, entregues }
+
 class AniversariantesScreen extends StatefulWidget {
   const AniversariantesScreen({super.key});
 
@@ -16,6 +18,7 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
   double? _precoEspecialServico;
   bool _carregandoProdutos = false;
   bool _carregandoServicos = false;
+  FilterOpcao _filtro = FilterOpcao.todos;
   void _selecionarData() async {
     final data = await showDatePicker(
       context: context,
@@ -26,9 +29,7 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-              ),
+              style: TextButton.styleFrom(foregroundColor: Colors.white),
             ),
           ),
           child: child!,
@@ -225,6 +226,43 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Clientes Aniversariantes'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                const Text('Filtrar:'),
+                const SizedBox(width: 12),
+                DropdownButton<FilterOpcao>(
+                  value: _filtro,
+                  items: [
+                    DropdownMenuItem(
+                      value: FilterOpcao.todos,
+                      child: Text('Todos'),
+                    ),
+                    DropdownMenuItem(
+                      value: FilterOpcao.pendentes,
+                      child: Text('Pendentes'),
+                    ),
+                    DropdownMenuItem(
+                      value: FilterOpcao.expirados,
+                      child: Text('Expirados'),
+                    ),
+                    DropdownMenuItem(
+                      value: FilterOpcao.entregues,
+                      child: Text('Entregues'),
+                    ),
+                  ],
+                  onChanged: (v) {
+                    if (v == null) return;
+                    setState(() => _filtro = v);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.today),
@@ -398,24 +436,49 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
                       if (_envioAutomatico) {
                         _selecionados = clientes.map((c) => c.id).toList();
                       }
+                      // Aplicar filtro baseado em presenteAniversario
+                      final filtrados = clientes.where((cliente) {
+                        final presente = cliente.presenteAniversario;
+                        final resgatado =
+                            presente != null && presente['resgatado'] == true;
+                        final entregue =
+                            presente != null && presente['entregue'] == true;
+                        final expirado = _presenteExpirado(presente);
+
+                        switch (_filtro) {
+                          case FilterOpcao.todos:
+                            return true;
+                          case FilterOpcao.pendentes:
+                            return presente != null &&
+                                !resgatado &&
+                                !entregue &&
+                                !expirado;
+                          case FilterOpcao.expirados:
+                            return presente != null &&
+                                expirado &&
+                                !resgatado &&
+                                !entregue;
+                          case FilterOpcao.entregues:
+                            return presente != null && entregue;
+                        }
+                        return false;
+                      }).toList();
+
                       return Column(
                         children: [
                           Expanded(
                             child: ListView.separated(
                               padding: const EdgeInsets.all(16),
-                              itemCount: clientes.length,
+                              itemCount: filtrados.length,
                               separatorBuilder: (_, __) => const Divider(),
                               itemBuilder: (context, index) {
-                                final cliente = clientes[index];
+                                final cliente = filtrados[index];
                                 return ListTile(
                                   leading: const Icon(
                                     Icons.cake,
                                     color: Colors.pink,
                                   ),
                                   title: Text(cliente.nome),
-                                  subtitle: Text(
-                                    'Nascimento: ${_formatarData(cliente.dataNascimento)}',
-                                  ),
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -423,6 +486,39 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
                                         icon: const Icon(Icons.edit),
                                         onPressed: () =>
                                             _editarCliente(cliente),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.done_all,
+                                          color: Colors.green,
+                                        ),
+                                        tooltip: 'Marcar entregue',
+                                        onPressed: () async {
+                                          try {
+                                            await FirebaseService.marcarPresenteComoEntregue(
+                                              cliente.id,
+                                            );
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  'Presente marcado como entregue',
+                                                ),
+                                              ),
+                                            );
+                                          } catch (e) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  'Erro ao marcar entregue',
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        },
                                       ),
                                       if (!_envioAutomatico)
                                         Checkbox(
@@ -441,6 +537,19 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
                                             });
                                           },
                                         ),
+                                    ],
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Nascimento: ${_formatarData(cliente.dataNascimento)}',
+                                      ),
+                                      const SizedBox(height: 4),
+                                      _buildStatusBadge(
+                                        cliente.presenteAniversario,
+                                      ),
                                     ],
                                   ),
                                 );
@@ -464,6 +573,66 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
                 ),
               ],
             ),
+    );
+  }
+
+  bool _presenteExpirado(Map<String, dynamic>? presente) {
+    if (presente == null) return false;
+    final exp = presente['expiraEm'];
+    if (exp == null) return false;
+    try {
+      DateTime expDate;
+      if (exp is String) {
+        expDate = DateTime.parse(exp);
+      } else if (exp is Map &&
+          (exp['_seconds'] != null || exp['seconds'] != null)) {
+        final seconds = exp['_seconds'] ?? exp['seconds'];
+        expDate = DateTime.fromMillisecondsSinceEpoch((seconds as int) * 1000);
+      } else if (exp is num) {
+        expDate = DateTime.fromMillisecondsSinceEpoch(exp.toInt());
+      } else if (exp is DateTime) {
+        expDate = exp;
+      } else {
+        expDate = DateTime.parse(exp.toString());
+      }
+      return DateTime.now().isAfter(expDate);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Widget _buildStatusBadge(Map<String, dynamic>? presente) {
+    if (presente == null) {
+      return const SizedBox.shrink();
+    }
+
+    final resgatado = presente['resgatado'] == true;
+    final entregue = presente['entregue'] == true;
+    final expirado = _presenteExpirado(presente);
+
+    String text = 'Pendente';
+    Color color = Colors.orange;
+    if (resgatado) {
+      text = 'Resgatado';
+      color = Colors.green;
+    } else if (entregue) {
+      text = 'Entregue';
+      color = Colors.blue;
+    } else if (expirado) {
+      text = 'Expirado';
+      color = Colors.grey;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(color: color, fontWeight: FontWeight.bold),
+      ),
     );
   }
 }

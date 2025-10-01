@@ -49,7 +49,9 @@ class Agendamento {
           parsedDataHora = tryParse;
         } else {
           // Não está em ISO; tentar log e fallback
-          print('Aviso: dataHora em formato inesperado, usando DateTime.now() - valor: $raw');
+          print(
+            'Aviso: dataHora em formato inesperado, usando DateTime.now() - valor: $raw',
+          );
           parsedDataHora = DateTime.now();
         }
       } else {
@@ -60,20 +62,32 @@ class Agendamento {
       parsedDataHora = DateTime.now();
     }
 
+    // Ler campos com tolerância a valores nulos (alguns documentos podem ter apenas nomes)
+    final id = json['id'] as String? ?? '';
+    final clienteId = json['clienteId'] as String? ?? '';
+    final barbeiroId = json['barbeiroId'] as String? ?? '';
+    final servicoId = json['servicoId'] as String? ?? '';
+    final statusStr = json['status'] as String?;
+    final status = StatusAgendamento.values.firstWhere(
+      (e) => e.name == statusStr,
+      orElse: () => StatusAgendamento.agendado,
+    );
+    final observacoes = json['observacoes'] as String? ?? '';
+    final valor = (json['valor'] as num?)?.toDouble() ?? 0.0;
+    final clienteNome = json['clienteNome'] as String?;
+    final servicoNome = json['servicoNome'] as String?;
+
     return Agendamento(
-      id: json['id'] as String,
-      clienteId: json['clienteId'] as String,
-      barbeiroId: json['barbeiroId'] as String,
-      servicoId: json['servicoId'] as String,
+      id: id,
+      clienteId: clienteId,
+      barbeiroId: barbeiroId,
+      servicoId: servicoId,
       dataHora: parsedDataHora,
-      status: StatusAgendamento.values.firstWhere(
-        (e) => e.name == json['status'],
-        orElse: () => StatusAgendamento.agendado,
-      ),
-      observacoes: json['observacoes'] as String? ?? '',
-      valor: (json['valor'] as num).toDouble(),
-      clienteNome: json['clienteNome'] as String?,
-      servicoNome: json['servicoNome'] as String?,
+      status: status,
+      observacoes: observacoes,
+      valor: valor,
+      clienteNome: clienteNome,
+      servicoNome: servicoNome,
     );
   }
 

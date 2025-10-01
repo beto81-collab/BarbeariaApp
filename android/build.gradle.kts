@@ -1,5 +1,6 @@
 plugins {
-    id("com.google.gms.google-services") version "4.4.0" apply false
+    // Alinhado com a versão declarada em settings.gradle.kts (4.3.15)
+    id("com.google.gms.google-services") version "4.3.15" apply false
 }
 
 allprojects {

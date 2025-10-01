@@ -48,10 +48,14 @@ exports.enviarPresenteAniversario = onSchedule({
     // Só envia se não tiver presente ou se já foi resgatado
     if (!userData.presenteAniversario ||
         userData.presenteAniversario.resgatado) {
+      // calcular data de expiração em 7 dias
+      const expira = new Date();
+      expira.setDate(expira.getDate() + 7);
       batch.update(userRef, {
         presenteAniversario: {
           ...oferta,
           enviadoEm: admin.firestore.FieldValue.serverTimestamp(),
+          expiraEm: admin.firestore.Timestamp.fromDate(expira),
           resgatado: false,
         },
       });
@@ -62,5 +66,53 @@ exports.enviarPresenteAniversario = onSchedule({
   await batch.commit();
   console.log(`Presente de aniversário enviado para ` +
       `${contadorEnviados} usuários.`);
+  return null;
+});
+
+// Limpar presentes expirados diariamente às 04:00 BRT
+exports.limparPresentesExpirados = onSchedule({
+  schedule: "0 7 * * *",
+  timeZone: "America/Sao_Paulo",
+  memory: "128MiB",
+}, async (event) => {
+  const db = admin.firestore();
+  const agora = admin.firestore.Timestamp.now();
+
+  console.log("Procurando presentes expirados...");
+
+  // Buscar usuários cujo presente existe e tem expiraEm <= agora
+  const usuariosSnap = await db
+      .collection("usuarios")
+      .where("presenteAniversario.expiraEm", "<=", agora)
+      .get();
+
+  if (usuariosSnap.empty) {
+    console.log("Nenhum presente expirado encontrado.");
+    return null;
+  }
+
+  const batch = db.batch();
+  let removidos = 0;
+
+  usuariosSnap.forEach((doc) => {
+    const data = doc.data();
+    const presente = data.presenteAniversario || null;
+    // Só remover se não resgatado e não marcado como entregue
+    if (presente && !presente.resgatado && !presente.entregue) {
+      const ref = doc.ref;
+      batch.update(ref, {
+        presenteAniversario: admin.firestore.FieldValue.delete(),
+      });
+      removidos++;
+    }
+  });
+
+  if (removidos > 0) {
+    await batch.commit();
+    console.log(`Removidos ${removidos} presentes expirados.`);
+  } else {
+    console.log("Nenhum presente elegível para remoção encontrado.");
+  }
+
   return null;
 });
