@@ -36,68 +36,82 @@ class _AdminAgendamentosScreenState extends State<AdminAgendamentosScreen> {
       body: StreamBuilder<List<Agendamento>>(
         stream: FirebaseService.streamAgendamentosPendentes(),
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            print('Erro no stream de agendamentos pendentes: ${snapshot.error}');
+            return Center(child: Text('Erro ao carregar agendamentos: ${snapshot.error}'));
+          }
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
+
           final agendamentos = snapshot.data ?? [];
+          print('Stream agendamentos pendentes - documentos recebidos: ${agendamentos.length}');
+
           if (agendamentos.isEmpty) {
-            return const Center(child: Text('Nenhum agendamento pendente'));
+            return FutureBuilder<List<Agendamento>>(
+              future: FirebaseService.obterTodosAgendamentos().then((list) => list.where((a) => (a.status.name == 'pendente' || a.status == StatusAgendamento.agendado)).toList()),
+              builder: (context, snap2) {
+                if (snap2.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+                final fallback = snap2.data ?? [];
+                print('Fallback obteve agendamentos pendentes: ${fallback.length}');
+                if (fallback.isEmpty) return const Center(child: Text('Nenhum agendamento pendente'));
+                return _buildListView(fallback);
+              },
+            );
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemCount: agendamentos.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              final a = agendamentos[index];
-
-              // Prioriza nomes denormalizados no documento, senão usa cache/service
-              final clienteNomeDoc = a.clienteNome;
-              final servicoNomeDoc = a.servicoNome;
-
-              if (clienteNomeDoc == null) _ensureClienteNome(a.clienteId);
-              if (servicoNomeDoc == null) _ensureServicoNome(a.servicoId);
-
-              final clienteNome = clienteNomeDoc ?? _clienteNomes[a.clienteId] ?? a.clienteId;
-              final servicoNome = servicoNomeDoc ?? _servicoNomes[a.servicoId] ?? a.servicoId;
-
-              return Card(
-                child: ListTile(
-                  title: Text(servicoNome),
-                  subtitle: Text('$clienteNome • ${a.dataHora.toLocal()}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.check, color: Colors.green),
-                        tooltip: 'Confirmar',
-                        onPressed: () async {
-                          await FirebaseService.alterarStatusAgendamento(
-                              a.id, StatusAgendamento.concluido);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Agendamento confirmado')),
-                          );
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.red),
-                        tooltip: 'Cancelar',
-                        onPressed: () async {
-                          await FirebaseService.alterarStatusAgendamento(
-                              a.id, StatusAgendamento.cancelado);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Agendamento cancelado')),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
+          return _buildListView(agendamentos);
         },
       ),
+    );
+  }
+
+  Widget _buildListView(List<Agendamento> agendamentos) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(12),
+      itemCount: agendamentos.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final a = agendamentos[index];
+
+        final clienteNomeDoc = a.clienteNome;
+        final servicoNomeDoc = a.servicoNome;
+
+        if (clienteNomeDoc == null) _ensureClienteNome(a.clienteId);
+        if (servicoNomeDoc == null) _ensureServicoNome(a.servicoId);
+
+        final clienteNome = clienteNomeDoc ?? _clienteNomes[a.clienteId] ?? a.clienteId;
+        final servicoNome = servicoNomeDoc ?? _servicoNomes[a.servicoId] ?? a.servicoId;
+
+        return Card(
+          child: ListTile(
+            title: Text(servicoNome),
+            subtitle: Text('$clienteNome • ${a.dataHora.toLocal()}'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.check, color: Colors.green),
+                  tooltip: 'Confirmar',
+                  onPressed: () async {
+                    await FirebaseService.alterarStatusAgendamento(a.id, StatusAgendamento.concluido);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Agendamento confirmado')));
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.red),
+                  tooltip: 'Cancelar',
+                  onPressed: () async {
+                    await FirebaseService.alterarStatusAgendamento(a.id, StatusAgendamento.cancelado);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Agendamento cancelado')));
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

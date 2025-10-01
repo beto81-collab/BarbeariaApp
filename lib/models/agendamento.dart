@@ -40,15 +40,32 @@ class Agendamento {
   }
 
   factory Agendamento.fromJson(Map<String, dynamic> json) {
+    DateTime parsedDataHora;
+    try {
+      final raw = json['dataHora'];
+      if (raw is String) {
+        final tryParse = DateTime.tryParse(raw);
+        if (tryParse != null) {
+          parsedDataHora = tryParse;
+        } else {
+          // Não está em ISO; tentar log e fallback
+          print('Aviso: dataHora em formato inesperado, usando DateTime.now() - valor: $raw');
+          parsedDataHora = DateTime.now();
+        }
+      } else {
+        parsedDataHora = (raw as dynamic).toDate(); // Timestamp
+      }
+    } catch (e) {
+      print('Erro ao parsear dataHora do agendamento: $e');
+      parsedDataHora = DateTime.now();
+    }
+
     return Agendamento(
       id: json['id'] as String,
       clienteId: json['clienteId'] as String,
       barbeiroId: json['barbeiroId'] as String,
       servicoId: json['servicoId'] as String,
-      dataHora: json['dataHora'] is String
-          ? DateTime.parse(json['dataHora'] as String)
-          : (json['dataHora'] as dynamic)
-                .toDate(), // Para Timestamp do Firebase
+      dataHora: parsedDataHora,
       status: StatusAgendamento.values.firstWhere(
         (e) => e.name == json['status'],
         orElse: () => StatusAgendamento.agendado,
