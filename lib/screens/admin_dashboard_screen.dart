@@ -4,6 +4,7 @@ import '../widgets/logo_corte_real.dart';
 import '../services/firebase_service.dart';
 import 'produtos_screen.dart';
 import 'servicos_screen.dart';
+import 'agendamento_screen.dart';
 import 'horarios_screen.dart';
 import 'atualizacoes_screen.dart';
 import 'backup_screen.dart';
@@ -71,6 +72,14 @@ class AdminDashboardScreen extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => AniversariantesScreen()),
+              ),
+            ),
+            _AdminTile(
+              icon: Icons.event,
+              label: 'Agendamentos',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AgendamentoScreen()),
               ),
             ),
             _AdminTile(
