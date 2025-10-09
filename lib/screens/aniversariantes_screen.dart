@@ -41,7 +41,7 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
     }
   }
 
-  Future<void> _enviarOfertas() async {
+  Future<void> _registrarOfertas() async {
     if (_selecionados.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -79,16 +79,18 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
         };
       }
 
-      // Envia a oferta para cada cliente selecionado
-      int enviados = 0;
+      // Registra a oferta no Firestore para cada cliente selecionado
+      int registrados = 0;
       for (final clienteId in _selecionados) {
         await FirebaseService.atualizarPresenteAniversario(clienteId, oferta);
-        enviados++;
+        registrados++;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Presente enviado para $enviados aniversariante(s)!'),
+          content: Text(
+            'Presente registrado para $registrados aniversariante(s)!',
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -106,7 +108,7 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
     }
   }
 
-  Future<void> _enviarOfertasAniversariantesHoje() async {
+  Future<void> _registrarOfertasAniversariantesHoje() async {
     try {
       // Busca aniversariantes de hoje
       final hoje = DateTime.now();
@@ -151,17 +153,17 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
         };
       }
 
-      // Envia para todos os aniversariantes de hoje que não têm presente ou já resgataram
-      int enviados = 0;
+      // Registra para todos os aniversariantes de hoje que não têm presente ou já resgataram
+      int registrados = 0;
       for (final cliente in aniversariantesHoje) {
         await FirebaseService.atualizarPresenteAniversario(cliente.id, oferta);
-        enviados++;
+        registrados++;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Presente enviado para $enviados aniversariante(s) de hoje!',
+            'Presente registrado para $registrados aniversariante(s) de hoje!',
           ),
           backgroundColor: Colors.green,
         ),
@@ -176,10 +178,7 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
     }
   }
 
-  void _editarCliente(Usuario cliente) {
-    // Aqui você pode abrir uma tela ou diálogo para editar os dados do cliente
-    // Exemplo: Navigator.push(...)
-  }
+  // ...editing removed; admin não edita cliente por esta tela
 
   String _formatarData(DateTime? data) {
     if (data == null) return 'Não informado';
@@ -266,8 +265,8 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.today),
-            onPressed: _enviarOfertasAniversariantesHoje,
-            tooltip: 'Enviar oferta para aniversariantes de hoje',
+            onPressed: _registrarOfertasAniversariantesHoje,
+            tooltip: 'Registrar oferta para aniversariante de hoje',
           ),
           IconButton(
             icon: const Icon(Icons.calendar_today),
@@ -461,7 +460,6 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
                           case FilterOpcao.entregues:
                             return presente != null && entregue;
                         }
-                        return false;
                       }).toList();
 
                       return Column(
@@ -479,49 +477,8 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
                                     color: Colors.pink,
                                   ),
                                   title: Text(cliente.nome),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.edit),
-                                        onPressed: () =>
-                                            _editarCliente(cliente),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.done_all,
-                                          color: Colors.green,
-                                        ),
-                                        tooltip: 'Marcar entregue',
-                                        onPressed: () async {
-                                          try {
-                                            await FirebaseService.marcarPresenteComoEntregue(
-                                              cliente.id,
-                                            );
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                  'Presente marcado como entregue',
-                                                ),
-                                              ),
-                                            );
-                                          } catch (e) {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                  'Erro ao marcar entregue',
-                                                ),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                      ),
-                                      if (!_envioAutomatico)
-                                        Checkbox(
+                                  trailing: !_envioAutomatico
+                                      ? Checkbox(
                                           value: _selecionados.contains(
                                             cliente.id,
                                           ),
@@ -536,9 +493,8 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
                                               }
                                             });
                                           },
-                                        ),
-                                    ],
-                                  ),
+                                        )
+                                      : const SizedBox.shrink(),
                                   subtitle: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -563,7 +519,7 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
                               label: const Text('Enviar oferta/presente'),
                               onPressed: _selecionados.isEmpty
                                   ? null
-                                  : _enviarOfertas,
+                                  : _registrarOfertas,
                             ),
                           ),
                         ],

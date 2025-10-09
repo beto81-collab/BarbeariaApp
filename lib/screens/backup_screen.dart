@@ -5,7 +5,8 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:share/share.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:cross_file/cross_file.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/firebase_service.dart';
 import '../models/produto.dart';
@@ -86,10 +87,11 @@ class _BackupScreenState extends State<BackupScreen> {
     try {
       final dados = await _exportarDados();
       final jsonStr = jsonEncode(dados);
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/backup_barbearia.json');
-      await file.writeAsString(jsonStr);
-      await Share.shareFiles([file.path], text: 'Backup do app Corte Real');
+  final directory = await getApplicationDocumentsDirectory();
+  final file = File('${directory.path}/backup_barbearia.json');
+  await file.writeAsString(jsonStr);
+  // Usar XFile com share_plus para compartilhar arquivos
+  await Share.shareXFiles([XFile(file.path)], text: 'Backup do app Corte Real');
       setState(() => _mensagem = 'Backup exportado com sucesso!');
     } catch (e) {
       setState(() => _mensagem = 'Erro ao exportar: $e');

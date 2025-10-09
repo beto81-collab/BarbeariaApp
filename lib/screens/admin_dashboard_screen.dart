@@ -13,6 +13,7 @@ import 'clientes_screen.dart';
 import 'aniversariantes_screen.dart';
 import 'vitrine_screen.dart';
 import 'promocoes_screen.dart';
+import 'programa_pontos_screen.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -75,9 +76,11 @@ class AdminDashboardScreen extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => AniversariantesScreen()),
               ),
             ),
-            _AdminTile(
+            _AdminTileComBadge(
               icon: Icons.event,
               label: 'Agendamentos',
+              contadorStream:
+                  FirebaseService.streamContadorAgendamentosPendentes(),
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -93,14 +96,7 @@ class AdminDashboardScreen extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => HorariosScreen()),
               ),
             ),
-            _AdminTile(
-              icon: Icons.system_update,
-              label: 'Atualizações',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => AtualizacoesScreen()),
-              ),
-            ),
+            // Atualizações tile removed
             _AdminTile(
               icon: Icons.people,
               label: 'Clientes',
@@ -115,6 +111,14 @@ class AdminDashboardScreen extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => BackupScreen()),
+              ),
+            ),
+            _AdminTile(
+              icon: Icons.star,
+              label: 'Programa de Pontos',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ProgramaPontosScreen()),
               ),
             ),
           ],

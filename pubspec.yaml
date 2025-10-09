@@ -61,7 +61,7 @@ dependencies:
   # Backup local
   file_picker: ^6.1.1
   path_provider: ^2.1.3
-  share: ^2.0.4
+  share_plus: ^12.0.0
   image_picker: ^1.0.7
   # Remover fl_cloud_storage se não for mais usar
 

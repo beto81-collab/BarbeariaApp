@@ -9,6 +9,8 @@ class Usuario {
   final DateTime? dataNascimento; // Novo campo
   final Map<String, dynamic>?
   presenteAniversario; // Campo para presente de aniversário
+  final int atendimentos; // Novo campo
+  final int pontosFidelidade; // Novo campo para fidelidade
 
   const Usuario({
     required this.id,
@@ -20,6 +22,8 @@ class Usuario {
     required this.dataCadastro,
     this.dataNascimento, // Novo campo opcional
     this.presenteAniversario, // Novo campo para presente
+    this.atendimentos = 0, // Valor padrão
+    this.pontosFidelidade = 0, // Valor padrão
   });
 
   Map<String, dynamic> toJson() {
@@ -33,6 +37,8 @@ class Usuario {
       'dataCadastro': dataCadastro.toIso8601String(),
       'dataNascimento': dataNascimento?.toIso8601String(),
       'presenteAniversario': presenteAniversario,
+      'atendimentos': atendimentos, // Adicionado aqui
+      'pontosFidelidade': pontosFidelidade,
     };
   }
 
@@ -52,6 +58,16 @@ class Usuario {
           ? DateTime.parse(json['dataNascimento'] as String)
           : null,
       presenteAniversario: json['presenteAniversario'] as Map<String, dynamic>?,
+      atendimentos: json['atendimentos'] != null
+          ? (json['atendimentos'] is int
+                ? json['atendimentos'] as int
+                : int.tryParse(json['atendimentos'].toString()) ?? 0)
+          : 0, // Mapeado aqui
+      pontosFidelidade: json['pontosFidelidade'] != null
+          ? (json['pontosFidelidade'] is int
+                ? json['pontosFidelidade'] as int
+                : int.tryParse(json['pontosFidelidade'].toString()) ?? 0)
+          : 0,
     );
   }
 

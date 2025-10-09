@@ -14,6 +14,27 @@ import '../models/servico.dart';
 import '../models/horario.dart';
 
 class FirebaseService {
+  /// Stream que retorna o número de agendamentos pendentes de confirmação (para badge no dashboard)
+  static Stream<int> streamContadorAgendamentosPendentes() {
+    return _firestore.collection(_appointmentsCollection).snapshots().map((
+      snapshot,
+    ) {
+      int count = 0;
+      for (final doc in snapshot.docs) {
+        final raw = doc.data();
+        final dynamic statusField = raw['status'];
+        final statusRaw = statusField is String
+            ? statusField
+            : (statusField?.toString() ?? '');
+        if (statusRaw == 'pendente' ||
+            statusRaw == StatusAgendamento.agendado.name) {
+          count++;
+        }
+      }
+      return count;
+    });
+  }
+
   /// Faz upload de uma imagem da vitrine usando bytes (para Flutter Web) e salva a URL no Firestore
   static Future<void> uploadImagemVitrineBytes(Uint8List imageBytes) async {
     try {
@@ -800,6 +821,42 @@ class FirebaseService {
     }
   }
 
+  /// Obtém o map cru do documento de usuário por id (ou null se não existir)
+  static Future<Map<String, dynamic>?> obterUsuarioMapPorId(
+    String usuarioId,
+  ) async {
+    try {
+      final doc = await _firestore
+          .collection(_usersCollection)
+          .doc(usuarioId)
+          .get();
+      if (!doc.exists || doc.data() == null) return null;
+      return Map<String, dynamic>.from(doc.data() as Map<String, dynamic>);
+    } catch (e) {
+      print('Erro ao obter map cru do usuário por id: $e');
+      return null;
+    }
+  }
+
+  /// Stream do map cru do documento do usuário por id (ou null se não existir)
+  static Stream<Map<String, dynamic>?> streamUsuarioMapPorId(String usuarioId) {
+    try {
+      return _firestore
+          .collection(_usersCollection)
+          .doc(usuarioId)
+          .snapshots()
+          .map((snap) {
+            if (!snap.exists || snap.data() == null) return null;
+            return Map<String, dynamic>.from(
+              snap.data() as Map<String, dynamic>,
+            );
+          });
+    } catch (e) {
+      print('Erro ao criar stream do usuário por id: $e');
+      return Stream.value(null);
+    }
+  }
+
   /// Obtém um serviço por id
   static Future<Servico?> obterServicoPorId(String servicoId) async {
     try {
@@ -825,6 +882,23 @@ class FirebaseService {
       BackupAutoConfig.houveAlteracao = true;
     } catch (e) {
       print('Erro ao atualizar usuário: $e');
+      rethrow;
+    }
+  }
+
+  /// Atualiza campos específicos do documento do usuário (merge parcial)
+  static Future<void> atualizarUsuarioField(
+    String usuarioId,
+    Map<String, dynamic> fields,
+  ) async {
+    try {
+      await _firestore
+          .collection(_usersCollection)
+          .doc(usuarioId)
+          .update(fields);
+      BackupAutoConfig.houveAlteracao = true;
+    } catch (e) {
+      print('Erro ao atualizar campos do usuário: $e');
       rethrow;
     }
   }
@@ -879,6 +953,123 @@ class FirebaseService {
     } catch (e) {
       print('Erro ao buscar clientes: $e');
       return [];
+    }
+  }
+
+  /// Retorna um stream de clientes cadastrados
+  Stream<List<Usuario>> streamClientes() {
+    return _firestore
+        .collection(_usersCollection)
+        .where('tipo', isEqualTo: 'cliente')
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => Usuario.fromJson({...doc.data(), 'id': doc.id}))
+              .toList();
+        });
+  }
+
+  /// Incrementa a contagem de atendimentos para um cliente em 1
+  Future<void> incrementServiceCount(String clienteId) async {
+    final docRef = _firestore.collection(_usersCollection).doc(clienteId);
+    await docRef.update({'atendimentos': FieldValue.increment(1)});
+    BackupAutoConfig.houveAlteracao = true;
+  }
+
+  /// Incrementa a contagem de atendimentos para um cliente em N
+  static Future<void> incrementServiceCountBy(String clienteId, int n) async {
+    if (n == 0) return;
+    final docRef = _firestore.collection(_usersCollection).doc(clienteId);
+    await docRef.update({'atendimentos': FieldValue.increment(n)});
+    BackupAutoConfig.houveAlteracao = true;
+  }
+
+  /// Incrementa pontos de fidelidade (campo 'pontosFidelidade') em N
+  static Future<void> incrementarPontosFidelidade(
+    String usuarioId,
+    int n,
+  ) async {
+    if (n == 0) return;
+    final docRef = _firestore.collection(_usersCollection).doc(usuarioId);
+    await docRef.update({'pontosFidelidade': FieldValue.increment(n)});
+    BackupAutoConfig.houveAlteracao = true;
+  }
+
+  /// Cria um documento de resgate de prêmio e zera/subtrai pontosFidelidade por 10
+  static Future<void> resgatarPremioParaUsuario(
+    String usuarioId,
+    Map<String, dynamic> premioData,
+  ) async {
+    try {
+      // Criar documento de resgate (não altera pontos; o consumo ocorre quando admin confirmar resgate)
+      await _firestore.collection('resgates').add({
+        'usuarioId': usuarioId,
+        'premio': premioData,
+        // registrar a hora de criação pelo servidor
+        'criadoEm': FieldValue.serverTimestamp(),
+        'resgatado': false,
+        'enviado': false,
+      });
+
+      // Também persistir o prêmio no documento do usuário para que o app cliente
+      // possa mostrar para qual prêmio o usuário está concorrendo ao checar pontos.
+      try {
+        final userRef = _firestore.collection(_usersCollection).doc(usuarioId);
+        await userRef.update({'premioProgramaPontos': premioData});
+      } catch (e) {
+        print(
+          'Aviso: falha ao salvar premioProgramaPontos no usuario $usuarioId: $e',
+        );
+      }
+
+      BackupAutoConfig.houveAlteracao = true;
+    } catch (e) {
+      print('Erro ao criar resgate: $e');
+      rethrow;
+    }
+  }
+
+  /// Verifica se já existe um documento de resgate para o usuário
+  static Future<bool> resgateExisteParaUsuario(String usuarioId) async {
+    try {
+      final query = await _firestore
+          .collection('resgates')
+          .where('usuarioId', isEqualTo: usuarioId)
+          .limit(1)
+          .get();
+      return query.docs.isNotEmpty;
+    } catch (e) {
+      print('Erro ao checar resgate existente: $e');
+      return false;
+    }
+  }
+
+  /// Finaliza o resgate: zera pontosFidelidade do usuário e remove o documento de resgate
+  static Future<void> finalizarResgateParaUsuario(String usuarioId) async {
+    try {
+      // Procurar documento de resgate para o usuário
+      final query = await _firestore
+          .collection('resgates')
+          .where('usuarioId', isEqualTo: usuarioId)
+          .limit(1)
+          .get();
+      if (query.docs.isEmpty) {
+        throw Exception('Nenhum resgate encontrado para este usuário');
+      }
+
+      for (final doc in query.docs) {
+        await doc.reference.delete();
+      }
+
+      // Zerar pontosFidelidade
+      final userRef = _firestore.collection(_usersCollection).doc(usuarioId);
+      await userRef.update({'pontosFidelidade': 0});
+      // pontos zerados
+
+      BackupAutoConfig.houveAlteracao = true;
+    } catch (e) {
+      print('Erro ao finalizar resgate: $e');
+      rethrow;
     }
   }
 
@@ -996,8 +1187,7 @@ class FirebaseService {
                   ? statusField
                   : (statusField?.toString() ?? '');
 
-              if (statusRaw == 'pendente' ||
-                  statusRaw == StatusAgendamento.agendado.name) {
+              if (statusRaw == 'pendente' || statusRaw == 'confirmado') {
                 try {
                   final ag = Agendamento.fromJson({...raw, 'id': doc.id});
                   list.add(ag);
