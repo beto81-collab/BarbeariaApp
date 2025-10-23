@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import '../models/usuario.dart';
 import '../services/firebase_service.dart';
 
@@ -25,11 +27,33 @@ class ClientesScreen extends StatelessWidget {
             separatorBuilder: (_, __) => const Divider(),
             itemBuilder: (context, index) {
               final cliente = clientes[index];
+              final onSurface = Theme.of(context).colorScheme.onSurface;
+              final lighter = onSurface.withAlpha(230); // tom mais claro e legível no tema escuro
               return ListTile(
                 leading: const Icon(Icons.person),
                 title: Text(cliente.nome),
-                subtitle: Text(cliente.email),
-                trailing: Text(cliente.telefone),
+                subtitle: InkWell(
+                  onTap: () => _showEmailActions(context, cliente.email),
+                  child: Text(
+                    cliente.email.isNotEmpty ? cliente.email : 'E-mail não informado',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: lighter),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                trailing: InkWell(
+                  onTap: () => _showPhoneActions(context, cliente.telefone),
+                  child: Text(
+                    cliente.telefone.isNotEmpty ? cliente.telefone : '—',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: lighter),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 onTap: () => _showClienteDetalhe(context, cliente),
               );
             },
@@ -48,9 +72,43 @@ class ClientesScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('E-mail: ${cliente.email}'),
+            Row(
+              children: [
+                const Text('E-mail: '),
+                Flexible(
+                  child: InkWell(
+                    onTap: () => _showEmailActions(context, cliente.email),
+                    child: Text(
+                      cliente.email.isNotEmpty ? cliente.email : 'Não informado',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: Theme.of(context).colorScheme.onSurface.withAlpha(230)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
-            Text('Telefone: ${cliente.telefone}'),
+            Row(
+              children: [
+                const Text('Telefone: '),
+                Flexible(
+                  child: InkWell(
+                    onTap: () => _showPhoneActions(context, cliente.telefone),
+                    child: Text(
+                      cliente.telefone.isNotEmpty ? cliente.telefone : 'Não informado',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: Theme.of(context).colorScheme.onSurface.withAlpha(230)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             Text(
               'Data de nascimento: '
@@ -70,6 +128,82 @@ class ClientesScreen extends StatelessWidget {
             child: const Text('Fechar'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showEmailActions(BuildContext context, String? email) {
+    if (email == null || email.isEmpty) return;
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.copy),
+              title: const Text('Copiar e-mail'),
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: email));
+                Navigator.pop(ctx);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.email),
+              title: const Text('Abrir app de e-mail'),
+              onTap: () {
+                final uri = 'mailto:$email';
+                try {
+                  launchUrlString(uri);
+                } catch (_) {}
+                Navigator.pop(ctx);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPhoneActions(BuildContext context, String? phone) {
+    if (phone == null || phone.isEmpty) return;
+    final cleaned = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.copy),
+              title: const Text('Copiar telefone'),
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: cleaned));
+                Navigator.pop(ctx);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.chat),
+              title: const Text('Abrir WhatsApp'),
+              onTap: () {
+                final uri = 'https://wa.me/$cleaned';
+                try {
+                  launchUrlString(uri);
+                } catch (_) {}
+                Navigator.pop(ctx);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.call),
+              title: const Text('Ligar'),
+              onTap: () {
+                final uri = 'tel:$cleaned';
+                try {
+                  launchUrlString(uri);
+                } catch (_) {}
+                Navigator.pop(ctx);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

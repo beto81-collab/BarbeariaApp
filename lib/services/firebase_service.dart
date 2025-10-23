@@ -261,6 +261,37 @@ class FirebaseService {
   static const String _configCollection = 'config';
   static const String _appVersionDoc = 'app_version';
 
+  // ==================== CONFIG: AGENDAMENTO (Switch app cliente) ====================
+  static const String _agendamentoConfigDoc = 'agendamento';
+
+  /// Stream do flag de habilitar/desabilitar agendamentos no app do cliente
+  /// Fallback para true (habilitado) quando o doc/campo não existir
+  static Stream<bool> streamAgendamentosHabilitados() {
+    return _firestore
+        .collection(_configCollection)
+        .doc(_agendamentoConfigDoc)
+        .snapshots()
+        .map((d) => (d.data()?['agendamentosHabilitados'] as bool?) ?? true);
+  }
+
+  /// Leitura pontual do flag (default true)
+  static Future<bool> getAgendamentosHabilitados() async {
+    final d = await _firestore
+        .collection(_configCollection)
+        .doc(_agendamentoConfigDoc)
+        .get();
+    return (d.data()?['agendamentosHabilitados'] as bool?) ?? true;
+  }
+
+  /// Atualiza/cria o flag de agendamentos habilitados no config/agendamento
+  static Future<void> setAgendamentosHabilitados(bool enabled) async {
+    final ref = _firestore
+        .collection(_configCollection)
+        .doc(_agendamentoConfigDoc);
+    await ref.set({'agendamentosHabilitados': enabled}, SetOptions(merge: true));
+    BackupAutoConfig.houveAlteracao = true;
+  }
+
   static Future<AppVersion?> buscarVersaoApp() async {
     try {
       final doc = await _firestore
@@ -672,15 +703,68 @@ class FirebaseService {
           .where('tipo', isEqualTo: 'cliente')
           .get();
 
-      return querySnapshot.docs
-          .map((doc) => Usuario.fromJson({...doc.data(), 'id': doc.id}))
-          .where(
-            (usuario) =>
-                usuario.dataNascimento != null &&
-                usuario.dataNascimento!.day == data.day &&
-                usuario.dataNascimento!.month == data.month,
-          )
-          .toList();
+      final List<Usuario> resultados = [];
+
+      for (final doc in querySnapshot.docs) {
+        try {
+          final raw = {...doc.data()};
+
+          // verificar se a data de nascimento bate com a data solicitada
+          DateTime? dataNascimento;
+          if (raw['dataNascimento'] != null) {
+            try {
+              dataNascimento = raw['dataNascimento'] is String
+                  ? DateTime.parse(raw['dataNascimento'] as String)
+                  : (raw['dataNascimento'] is DateTime
+                      ? raw['dataNascimento'] as DateTime
+                      : null);
+            } catch (_) {
+              dataNascimento = null;
+            }
+          }
+
+          if (dataNascimento == null) continue;
+          if (dataNascimento.day != data.day || dataNascimento.month != data.month) continue;
+
+          // se não tem presenteAniversario no documento do usuário, verificar se existe um resgate pendente (feito pelo app cliente)
+          if (raw['presenteAniversario'] == null) {
+            try {
+              final resgQuery = await _firestore
+                  .collection('resgates')
+                  .where('usuarioId', isEqualTo: doc.id)
+                  .where('resgatado', isEqualTo: false)
+                  .limit(1)
+                  .get();
+
+              if (resgQuery.docs.isNotEmpty) {
+                final r = resgQuery.docs.first.data();
+                // construir um presente a partir do resgate encontrado (mantendo a semântica usada pela UI)
+                final presenteFromResgate = <String, dynamic>{};
+                if (r['premio'] != null) {
+                  try {
+                    presenteFromResgate.addAll(Map<String, dynamic>.from(r['premio']));
+                  } catch (_) {
+                    // ignore
+                  }
+                }
+                presenteFromResgate['resgatado'] = r['resgatado'] ?? false;
+                presenteFromResgate['enviadoEm'] = r['criadoEm'] ?? r['enviadoEm'];
+                raw['presenteAniversario'] = presenteFromResgate;
+              }
+            } catch (e) {
+              // se falhar ao verificar resgates, prosseguir sem bloquear
+              print('Aviso: falha ao checar resgates para usuário ${doc.id}: $e');
+            }
+          }
+
+          raw['id'] = doc.id;
+          resultados.add(Usuario.fromJson(raw));
+        } catch (e) {
+          print('Erro ao processar documento de usuário ${doc.id}: $e');
+        }
+      }
+
+      return resultados;
     } catch (e) {
       print('Erro ao buscar aniversariantes: $e');
       return [];
@@ -706,24 +790,16 @@ class FirebaseService {
 
         final presente = data['presenteAniversario'] as Map<String, dynamic>?;
 
-        // Se não tem presente ou já foi resgatado ou não foi enviado hoje, conta
+        // Contar como pendente quando NÃO há presente OU quando há presente e
+        // ele não foi resgatado, não foi entregue e não expirou.
         if (presente == null) {
           count++; // Não recebeu presente ainda
         } else {
-          final enviadoEm = presente['enviadoEm'] as Timestamp?;
-          if (enviadoEm == null) {
-            count++; // Não foi enviado ainda
-          } else {
-            final dataEnvio = enviadoEm.toDate();
-            final hoje = DateTime.now();
-
-            // Se não foi enviado hoje, conta como pendente
-            if (dataEnvio.day != hoje.day ||
-                dataEnvio.month != hoje.month ||
-                dataEnvio.year != hoje.year) {
-              count++;
-            }
-            // Se foi enviado hoje, não conta (já foi processado)
+          final resgatado = presente['resgatado'] == true;
+          final entregue = presente['entregue'] == true;
+          final expirado = _presenteExpirado(presente);
+          if (!resgatado && !entregue && !expirado) {
+            count++;
           }
         }
       }
@@ -734,6 +810,7 @@ class FirebaseService {
       return 0;
     }
   }
+
 
   /// Stream que atualiza automaticamente o contador de aniversariantes pendentes
   static Stream<int> streamContadorAniversariantesHoje() {
@@ -757,22 +834,18 @@ class FirebaseService {
                 final presente =
                     data['presenteAniversario'] as Map<String, dynamic>?;
 
-                // Se não tem presente, conta
+                // debug removed
+
+                // Contar como pendente quando NÃO há presente OU quando há presente e
+                // ele não foi resgatado, não foi entregue e não expirou.
                 if (presente == null) {
                   count++;
                 } else {
-                  final enviadoEm = presente['enviadoEm'] as Timestamp?;
-                  if (enviadoEm == null) {
-                    count++; // Não foi enviado ainda
-                  } else {
-                    final dataEnvio = enviadoEm.toDate();
-
-                    // Se não foi enviado hoje, conta como pendente
-                    if (dataEnvio.day != hoje.day ||
-                        dataEnvio.month != hoje.month ||
-                        dataEnvio.year != hoje.year) {
-                      count++;
-                    }
+                  final resgatado = presente['resgatado'] == true;
+                  final entregue = presente['entregue'] == true;
+                  final expirado = _presenteExpirado(presente);
+                  if (!resgatado && !entregue && !expirado) {
+                    count++;
                   }
                 }
               }
@@ -785,6 +858,17 @@ class FirebaseService {
           }
         });
   }
+
+  /// Retorna true se o presente expirou. Aceita Timestamp, String, num ou Map.
+  static bool _presenteExpirado(Map<String, dynamic>? presente) {
+    if (presente == null) return false;
+    final exp = presente['expiraEm'];
+    if (exp == null) return false;
+    final dt = _toDateTime(exp);
+    if (dt == null) return false;
+    return DateTime.now().isAfter(dt);
+  }
+
 
   /// Obtém dados do usuário atual
   static Future<Usuario?> obterUsuarioAtual() async {
@@ -808,6 +892,10 @@ class FirebaseService {
 
   /// Obtém um usuário por id
   static Future<Usuario?> obterUsuarioPorId(String usuarioId) async {
+    if (usuarioId.isEmpty) {
+      print('aviso: obterUsuarioPorId chamado com id vazio');
+      return null;
+    }
     try {
       final doc = await _firestore
           .collection(_usersCollection)
@@ -825,6 +913,10 @@ class FirebaseService {
   static Future<Map<String, dynamic>?> obterUsuarioMapPorId(
     String usuarioId,
   ) async {
+    if (usuarioId.isEmpty) {
+      print('aviso: obterUsuarioMapPorId chamado com id vazio');
+      return null;
+    }
     try {
       final doc = await _firestore
           .collection(_usersCollection)
@@ -840,6 +932,10 @@ class FirebaseService {
 
   /// Stream do map cru do documento do usuário por id (ou null se não existir)
   static Stream<Map<String, dynamic>?> streamUsuarioMapPorId(String usuarioId) {
+    if (usuarioId.isEmpty) {
+      print('aviso: streamUsuarioMapPorId chamado com id vazio');
+      return Stream.value(null);
+    }
     try {
       return _firestore
           .collection(_usersCollection)
@@ -859,6 +955,10 @@ class FirebaseService {
 
   /// Obtém um serviço por id
   static Future<Servico?> obterServicoPorId(String servicoId) async {
+    if (servicoId.isEmpty) {
+      print('aviso: obterServicoPorId chamado com id vazio');
+      return null;
+    }
     try {
       final doc = await _firestore
           .collection(_servicesCollection)
@@ -956,6 +1056,23 @@ class FirebaseService {
     }
   }
 
+  /// Busca todos os barbeiros
+  static Future<List<Usuario>> buscarBarbeiros() async {
+    try {
+      final querySnapshot = await _firestore
+          .collection(_usersCollection)
+          .where('tipo', isEqualTo: 'barbeiro')
+          .get();
+
+      return querySnapshot.docs.map((doc) {
+        return Usuario.fromJson({...doc.data(), 'id': doc.id});
+      }).toList();
+    } catch (e) {
+      print('Erro ao buscar barbeiros: $e');
+      return [];
+    }
+  }
+
   /// Retorna um stream de clientes cadastrados
   Stream<List<Usuario>> streamClientes() {
     return _firestore
@@ -1011,16 +1128,10 @@ class FirebaseService {
         'enviado': false,
       });
 
-      // Também persistir o prêmio no documento do usuário para que o app cliente
-      // possa mostrar para qual prêmio o usuário está concorrendo ao checar pontos.
-      try {
-        final userRef = _firestore.collection(_usersCollection).doc(usuarioId);
-        await userRef.update({'premioProgramaPontos': premioData});
-      } catch (e) {
-        print(
-          'Aviso: falha ao salvar premioProgramaPontos no usuario $usuarioId: $e',
-        );
-      }
+      // NOTE: não persistir mais 'premioProgramaPontos' automaticamente no documento
+      // do usuário a partir da criação do resgate. A gravação de presentes
+      // específica (campo 'presenteAniversario') deve ser feita pela
+      // tela/fluxo de aniversariantes quando aplicável.
 
       BackupAutoConfig.houveAlteracao = true;
     } catch (e) {
@@ -1041,6 +1152,22 @@ class FirebaseService {
     } catch (e) {
       print('Erro ao checar resgate existente: $e');
       return false;
+    }
+  }
+
+  /// Stream de resgates pendentes (resgatado == false)
+  static Stream<List<Map<String, dynamic>>> streamResgatesPendentes() {
+    try {
+      return _firestore
+          .collection('resgates')
+          .where('resgatado', isEqualTo: false)
+          .snapshots()
+          .map((snap) => snap.docs
+              .map((d) => <String, dynamic>{...d.data(), 'id': d.id})
+              .toList());
+    } catch (e) {
+      print('Erro ao criar stream de resgates pendentes: $e');
+      return Stream.value([]);
     }
   }
 
@@ -1069,6 +1196,26 @@ class FirebaseService {
       BackupAutoConfig.houveAlteracao = true;
     } catch (e) {
       print('Erro ao finalizar resgate: $e');
+      rethrow;
+    }
+  }
+
+  /// Compatibilidade: cria um presente/resgate a partir de um payload genérico.
+  /// Se o payload contiver 'usuarioId', o documento será associado a este usuário.
+  /// Retorna o id do documento criado.
+  static Future<String> criarPresente(Map<String, dynamic> payload) async {
+    try {
+      final docRef = await _firestore.collection('resgates').add({
+        'premio': payload,
+        'usuarioId': payload['usuarioId'],
+        'criadoEm': FieldValue.serverTimestamp(),
+        'resgatado': payload['resgatado'] ?? false,
+        'enviado': payload['enviado'] ?? false,
+      });
+      BackupAutoConfig.houveAlteracao = true;
+      return docRef.id;
+    } catch (e) {
+      print('Erro ao criar presente/resgate: $e');
       rethrow;
     }
   }
@@ -1170,6 +1317,27 @@ class FirebaseService {
     }
   }
 
+  /// Busca agendamentos existentes entre duas datas (inclusive start/end)
+  static Future<List<Agendamento>> buscarAgendamentosEntre(
+    DateTime inicio,
+    DateTime fim,
+  ) async {
+    try {
+      final query = await _firestore
+          .collection(_appointmentsCollection)
+          .where('dataHora', isGreaterThanOrEqualTo: inicio)
+          .where('dataHora', isLessThanOrEqualTo: fim)
+          .get();
+
+      return query.docs
+          .map((doc) => Agendamento.fromJson({...doc.data(), 'id': doc.id}))
+          .toList();
+    } catch (e) {
+      print('Erro ao buscar agendamentos entre: $e');
+      return [];
+    }
+  }
+
   /// Stream de agendamentos pendentes (para administradores)
   static Stream<List<Agendamento>> streamAgendamentosPendentes() {
     return _firestore
@@ -1220,6 +1388,24 @@ class FirebaseService {
           .update({'status': novoStatus.name});
     } catch (e) {
       print('Erro ao alterar status do agendamento: $e');
+      rethrow;
+    }
+  }
+
+  /// Atualiza campos principais de um agendamento existente
+  static Future<void> atualizarAgendamento(Agendamento ag) async {
+    try {
+      final data = {
+        'dataHora': ag.dataHora,
+        'servicoId': ag.servicoId,
+        'observacoes': ag.observacoes,
+        'valor': ag.valor,
+        'clienteNome': ag.clienteNome,
+        'servicoNome': ag.servicoNome,
+      };
+      await _firestore.collection(_appointmentsCollection).doc(ag.id).update(data);
+    } catch (e) {
+      print('Erro ao atualizar agendamento: $e');
       rethrow;
     }
   }
@@ -1418,11 +1604,15 @@ class FirebaseService {
       final Map<String, dynamic> dias = Map<String, dynamic>.from(
         doc.data()!['dias'],
       );
-      return dias.values
+      final lista = dias.values
           .map(
             (v) => HorarioFuncionamento.fromJson(Map<String, dynamic>.from(v)),
           )
           .toList();
+      // Ordena pela sequência correta da semana
+      lista.sort((a, b) =>
+          diasSemana.indexOf(a.dia).compareTo(diasSemana.indexOf(b.dia)));
+      return lista;
     } catch (e) {
       print('Erro ao buscar horários: $e');
       rethrow;
@@ -1430,6 +1620,42 @@ class FirebaseService {
   }
 
   // ==================== UTILITÁRIOS ====================
+
+  /// Normaliza diferentes representações de data/hora (Timestamp, Map, String, num, DateTime)
+  /// para um objeto DateTime. Retorna null se não for possível.
+  static DateTime? _toDateTime(dynamic raw) {
+    if (raw == null) return null;
+    try {
+      // Firestore Timestamp
+      if (raw is Timestamp) return raw.toDate();
+
+      // Map com _seconds / seconds
+      if (raw is Map && (raw['_seconds'] != null || raw['seconds'] != null)) {
+        final seconds = raw['_seconds'] ?? raw['seconds'];
+        final intSec = (seconds is int) ? seconds : int.tryParse(seconds.toString());
+        if (intSec != null) return DateTime.fromMillisecondsSinceEpoch(intSec * 1000);
+      }
+
+      // Numeric epoch (seconds or milliseconds)
+      if (raw is num) {
+        // Heurística: se maior que 10^12 assume ms
+        final n = raw.toInt();
+        if (n > 1000000000000) return DateTime.fromMillisecondsSinceEpoch(n);
+        return DateTime.fromMillisecondsSinceEpoch(n * 1000);
+      }
+
+      // String ISO
+      if (raw is String) return DateTime.parse(raw);
+
+      // DateTime
+      if (raw is DateTime) return raw;
+
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
 
   /// Inicializa dados mock no Firebase (apenas para desenvolvimento)
   static Future<void> inicializarDadosMock() async {

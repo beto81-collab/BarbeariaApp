@@ -195,6 +195,7 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
   File? _imagemFile;
   Uint8List? _imagemBytes; // Para armazenar bytes da imagem na web
   String? _fotoUrl;
+  bool _adicionarNaVitrine = false; // nova opção para controlar se a imagem deve ir para a vitrine (padrão: desmarcado)
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nomeController;
   late TextEditingController _descricaoController;
@@ -305,6 +306,13 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
                 ],
               ),
               const SizedBox(height: 8),
+              // Opção para adicionar imagem na vitrine
+              CheckboxListTile(
+                value: _adicionarNaVitrine,
+                onChanged: (v) => setState(() => _adicionarNaVitrine = v ?? true),
+                title: const Text('Adicionar imagem na vitrine'),
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -404,36 +412,40 @@ class _ProdutoDialogState extends State<_ProdutoDialog> {
     if (kIsWeb && _imagemBytes != null) {
       fotoUrl = await FirebaseService.uploadImagemProdutoBytes(_imagemBytes!);
       debugPrint("Imagem salva com URL: $fotoUrl");
-      // Registrar a imagem também na vitrine
-      try {
-        if (fotoUrl.isNotEmpty) {
-          await FirebaseService.adicionarImagemVitrinePorUrl(fotoUrl);
-          if (!mounted) return;
+      // Registrar a imagem também na vitrine somente se a opção estiver marcada
+      if (_adicionarNaVitrine) {
+        try {
+          if (fotoUrl.isNotEmpty) {
+            await FirebaseService.adicionarImagemVitrinePorUrl(fotoUrl);
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Imagem adicionada à vitrine')),
+            );
+          }
+        } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Imagem adicionada à vitrine')),
+            SnackBar(content: Text('Erro ao adicionar imagem à vitrine: $e')),
           );
         }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao adicionar imagem à vitrine: $e')),
-        );
       }
     } else if (!kIsWeb && _imagemFile != null) {
       fotoUrl = await FirebaseService.uploadImagemProduto(_imagemFile!);
       debugPrint("Imagem salva com URL: $fotoUrl");
-      // Registrar a imagem também na vitrine
-      try {
-        if (fotoUrl.isNotEmpty) {
-          await FirebaseService.adicionarImagemVitrinePorUrl(fotoUrl);
-          if (!mounted) return;
+      // Registrar a imagem também na vitrine somente se a opção estiver marcada
+      if (_adicionarNaVitrine) {
+        try {
+          if (fotoUrl.isNotEmpty) {
+            await FirebaseService.adicionarImagemVitrinePorUrl(fotoUrl);
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Imagem adicionada à vitrine')),
+            );
+          }
+        } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Imagem adicionada à vitrine')),
+            SnackBar(content: Text('Erro ao adicionar imagem à vitrine: $e')),
           );
         }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao adicionar imagem à vitrine: $e')),
-        );
       }
     }
 

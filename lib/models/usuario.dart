@@ -9,6 +9,7 @@ class Usuario {
   final DateTime? dataNascimento; // Novo campo
   final Map<String, dynamic>?
   presenteAniversario; // Campo para presente de aniversário
+  final Map<String, dynamic>? premioProgramaPontos; // prêmio do programa de pontos (mapa bruto)
   final int atendimentos; // Novo campo
   final int pontosFidelidade; // Novo campo para fidelidade
 
@@ -22,6 +23,7 @@ class Usuario {
     required this.dataCadastro,
     this.dataNascimento, // Novo campo opcional
     this.presenteAniversario, // Novo campo para presente
+    this.premioProgramaPontos,
     this.atendimentos = 0, // Valor padrão
     this.pontosFidelidade = 0, // Valor padrão
   });
@@ -37,6 +39,7 @@ class Usuario {
       'dataCadastro': dataCadastro.toIso8601String(),
       'dataNascimento': dataNascimento?.toIso8601String(),
       'presenteAniversario': presenteAniversario,
+      'premioProgramaPontos': premioProgramaPontos,
       'atendimentos': atendimentos, // Adicionado aqui
       'pontosFidelidade': pontosFidelidade,
     };
@@ -58,6 +61,9 @@ class Usuario {
           ? DateTime.parse(json['dataNascimento'] as String)
           : null,
       presenteAniversario: json['presenteAniversario'] as Map<String, dynamic>?,
+    premioProgramaPontos: json['premioProgramaPontos'] != null
+      ? Map<String, dynamic>.from(json['premioProgramaPontos'] as Map)
+      : null,
       atendimentos: json['atendimentos'] != null
           ? (json['atendimentos'] is int
                 ? json['atendimentos'] as int

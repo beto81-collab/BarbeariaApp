@@ -180,8 +180,8 @@ class _ServicoDialogState extends State<_ServicoDialog> {
               TextFormField(
                 controller: _descricaoController,
                 decoration: const InputDecoration(labelText: 'Descrição'),
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Informe a descrição' : null,
+                // Descrição opcional: sem validador obrigatório
+                // validator: (v) => v == null || v.isEmpty ? 'Informe a descrição' : null,
               ),
               TextFormField(
                 controller: _precoController,

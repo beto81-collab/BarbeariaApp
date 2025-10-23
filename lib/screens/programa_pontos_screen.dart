@@ -17,6 +17,9 @@ class _ProgramaPontosScreenState extends State<ProgramaPontosScreen> {
   List<Servico> _servicos = [];
   Servico? _selectedServicoParaPresente;
   String? _selectedServicoId;
+  final String _BRINDE_ID = '__BRINDE__';
+  final TextEditingController _descontoController = TextEditingController(text: '0');
+  double _descontoPercent = 0.0;
   StreamSubscription<Map<String, dynamic>?>? _adminSub;
 
   // ID do administrador que salva a configuração de prêmio padrão
@@ -31,32 +34,47 @@ class _ProgramaPontosScreenState extends State<ProgramaPontosScreen> {
     // Inscrever no documento do admin para atualizações em tempo real
     _adminSub = FirebaseService.streamUsuarioMapPorId(_adminIdForDefaultPrize)
         .listen((adminMap) {
-          if (adminMap == null) return;
-          final premio = adminMap['premioProgramaPontos'];
-          if (premio == null) return;
-          try {
-            final Map<String, dynamic> premioMap = Map<String, dynamic>.from(
-              premio,
-            );
-            if (premioMap['id'] != null) {
-              final String possibleId = premioMap['id'].toString();
-              final found = _servicos.where((s) => s.id == possibleId).toList();
-              if (found.isNotEmpty) {
-                setState(() {
-                  _selectedServicoParaPresente = found.first;
-                  _selectedServicoId = found.first.id;
-                });
-                return;
-              }
+      if (adminMap == null) return;
+      final premio = adminMap['premioProgramaPontos'];
+      if (premio == null) return;
+      try {
+        final Map<String, dynamic> premioMap = Map<String, dynamic>.from(premio);
+
+        // aplicar desconto salvo no controller para refletir na UI
+        final descontoRaw = premioMap['descontoPercent'];
+        double descontoVal = 0.0;
+        if (descontoRaw is num) descontoVal = descontoRaw.toDouble();
+        if (descontoRaw is String) descontoVal = double.tryParse(descontoRaw.replaceAll(',', '.')) ?? 0.0;
+
+        if (mounted) {
+          setState(() {
+            _descontoPercent = descontoVal.clamp(0.0, 100.0);
+            _descontoController.text = _descontoPercent.toStringAsFixed(_descontoPercent.truncateToDouble() == _descontoPercent ? 0 : 2);
+          });
+        }
+
+        if (premioMap['id'] != null) {
+          final String possibleId = premioMap['id'].toString();
+          final found = _servicos.where((s) => s.id == possibleId).toList();
+          if (found.isNotEmpty) {
+            if (mounted) {
+              setState(() {
+                _selectedServicoParaPresente = found.first;
+                _selectedServicoId = found.first.id;
+              });
             }
-          } catch (e) {
-            // ignore parsing errors
+            return;
           }
-        });
+        }
+      } catch (e) {
+        // ignore parsing errors
+      }
+    });
   }
 
   @override
   void dispose() {
+    _descontoController.dispose();
     _adminSub?.cancel();
     super.dispose();
   }
@@ -90,6 +108,18 @@ class _ProgramaPontosScreenState extends State<ProgramaPontosScreen> {
       if (premio == null) return;
 
       final Map<String, dynamic> premioMap = Map<String, dynamic>.from(premio);
+
+      // aplicar desconto salvo no controller para refletir na UI (leitura inicial)
+      final descontoRaw = premioMap['descontoPercent'];
+      double descontoVal = 0.0;
+      if (descontoRaw is num) descontoVal = descontoRaw.toDouble();
+      if (descontoRaw is String) descontoVal = double.tryParse(descontoRaw.replaceAll(',', '.')) ?? 0.0;
+      if (mounted) {
+        setState(() {
+          _descontoPercent = descontoVal.clamp(0.0, 100.0);
+          _descontoController.text = _descontoPercent.toStringAsFixed(_descontoPercent.truncateToDouble() == _descontoPercent ? 0 : 2);
+        });
+      }
 
       // tentar casar por id
       if (premioMap['id'] != null) {
@@ -395,6 +425,7 @@ class _ProgramaPontosScreenState extends State<ProgramaPontosScreen> {
   }
 
   Future<void> _aplicarPremioAosParticipantes(Servico? premio) async {
+    // nota: esta função agora foi ajustada para receber um payload Map em chamadas futuras
     if (premio == null) return;
     try {
       int updated = 0;
@@ -405,10 +436,13 @@ class _ProgramaPontosScreenState extends State<ProgramaPontosScreen> {
             (userMap?['participaProgramaPontos'] ?? false) as bool;
         if (!participa) continue;
         final payload = premio.toJson();
-        // debug prints removed
-        await FirebaseService.atualizarUsuarioField(u.id, {
-          'premioProgramaPontos': payload,
-        });
+        final presente = {
+          ...payload,
+          'descontoPercent': _descontoPercent,
+          'enviadoEm': DateTime.now(),
+          'resgatado': false,
+        };
+        await FirebaseService.atualizarPresenteAniversario(u.id, presente);
         // confirmation logs removed
         updated++;
       }
@@ -451,78 +485,115 @@ class _ProgramaPontosScreenState extends State<ProgramaPontosScreen> {
                     margin: const EdgeInsets.all(8),
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Expanded(
-                            child: DropdownButtonFormField<String?>(
-                              value: _selectedServicoId,
-                              items: [
-                                const DropdownMenuItem<String?>(
-                                  value: null,
-                                  child: Text('Nenhum prêmio selecionado'),
-                                ),
-                                ..._servicos.map(
-                                  (s) => DropdownMenuItem<String?>(
-                                    value: s.id,
-                                    child: Text(
-                                      '${s.nome} - ${s.precoFormatado}',
+                          // Seletor e campo de desconto empilhados em coluna
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              DropdownButtonFormField<String?>(
+                                value: _selectedServicoId,
+                                items: [
+                                  const DropdownMenuItem<String?>(
+                                    value: null,
+                                    child: Text('Nenhum prêmio selecionado'),
+                                  ),
+                                  const DropdownMenuItem<String?>(
+                                    value: '__BRINDE__',
+                                    child: Text('Brinde'),
+                                  ),
+                                  ..._servicos.map(
+                                    (s) => DropdownMenuItem<String?>(
+                                      value: s.id,
+                                      child: Text(
+                                        '${s.nome} - ${s.precoFormatado}',
+                                      ),
                                     ),
                                   ),
+                                ],
+                                onChanged: (id) async {
+                                  final servList = _servicos
+                                      .where((s) => s.id == id)
+                                      .toList();
+                                  final serv = servList.isNotEmpty
+                                      ? servList.first
+                                      : null;
+                                  setState(() {
+                                    _selectedServicoId = id;
+                                    _selectedServicoParaPresente =
+                                        id == _BRINDE_ID ? null : serv;
+                                  });
+
+                                  try {
+                                    final toSave = serv?.toJson() ?? {};
+                                    toSave['descontoPercent'] = _descontoPercent;
+                                    await FirebaseService.atualizarUsuarioField(
+                                      _adminIdForDefaultPrize,
+                                      {'premioProgramaPontos': toSave},
+                                    );
+
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Prêmio salvo como padrão do admin',
+                                        ),
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Erro ao salvar prêmio: $e',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                decoration: const InputDecoration(
+                                  labelText: 'Prêmio por 10 atendimentos',
+                                  border: InputBorder.none,
                                 ),
-                              ],
-                              onChanged: (id) async {
-                                final servList = _servicos
-                                    .where((s) => s.id == id)
-                                    .toList();
-                                final serv = servList.isNotEmpty
-                                    ? servList.first
-                                    : null;
-                                setState(() {
-                                  _selectedServicoId = id;
-                                  _selectedServicoParaPresente = serv;
-                                });
-
-                                try {
-                                  await FirebaseService.atualizarUsuarioField(
-                                    _adminIdForDefaultPrize,
-                                    {'premioProgramaPontos': serv?.toJson()},
-                                  );
-                                  // admin update confirmed (no debug print)
-
-                                  if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Prêmio salvo como padrão do admin',
-                                      ),
-                                    ),
-                                  );
-                                } catch (e) {
-                                  // error logged below
-                                  if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Erro ao salvar prêmio: $e',
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                              decoration: const InputDecoration(
-                                labelText: 'Prêmio por 10 atendimentos',
-                                border: InputBorder.none,
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed: _selectedServicoParaPresente == null
-                                ? null
-                                : () => _aplicarPremioAosParticipantes(
-                                    _selectedServicoParaPresente,
+                              const SizedBox(height: 8),
+                              // Campo de desconto (%), agora abaixo do seletor
+                              SizedBox(
+                                width: 150,
+                                child: TextFormField(
+                                  controller: _descontoController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Desconto (%)',
+                                    border: OutlineInputBorder(),
                                   ),
-                            child: const Text('Aplicar prêmio'),
+                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  onChanged: (v) {
+                                    final parsed = double.tryParse(v.replaceAll(',', '.')) ?? 0.0;
+                                    setState(() {
+                                      _descontoPercent = parsed.clamp(0.0, 100.0);
+                                      _descontoController.text = _descontoPercent.toString();
+                                      _descontoController.selection = TextSelection.fromPosition(TextPosition(offset: _descontoController.text.length));
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          // Botão alinhado à direita sem usar Spacer/Expanded
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: ElevatedButton(
+                              onPressed: _selectedServicoId == null
+                                  ? null
+                                  : () => _aplicarPremioAosParticipantes(
+                                      _selectedServicoParaPresente,
+                                    ),
+                              child: const Text('Aplicar prêmio'),
+                            ),
                           ),
                         ],
                       ),
@@ -547,12 +618,11 @@ class _ProgramaPontosScreenState extends State<ProgramaPontosScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Telefone: ${cliente.telefone}'),
-                              if (cliente.toJson()['premioProgramaPontos'] !=
-                                  null)
+                              if (cliente.presenteAniversario != null)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 4.0),
                                   child: Text(
-                                    'Prêmio: ${(cliente.toJson()['premioProgramaPontos']['nome'] ?? cliente.toJson()['premioProgramaPontos']['descricao'])}',
+                                    'Prêmio: ${(cliente.presenteAniversario?['nome'] ?? cliente.presenteAniversario?['descricao'])}',
                                     style: const TextStyle(
                                       fontStyle: FontStyle.italic,
                                       fontSize: 12,

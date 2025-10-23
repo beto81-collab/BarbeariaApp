@@ -296,6 +296,7 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
                               },
                               child: DropdownButtonFormField<Produto>(
                                 initialValue: _produtoEspecial,
+                                isExpanded: true,
                                 items: [
                                   const DropdownMenuItem<Produto>(
                                     value: null,
@@ -332,6 +333,7 @@ class _AniversariantesScreenState extends State<AniversariantesScreen> {
                               },
                               child: DropdownButtonFormField<Servico>(
                                 initialValue: _servicoEspecial,
+                                isExpanded: true,
                                 items: [
                                   const DropdownMenuItem<Servico>(
                                     value: null,

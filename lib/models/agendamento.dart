@@ -9,6 +9,8 @@ class Agendamento {
   final double valor;
   final String? clienteNome;
   final String? servicoNome;
+  final String? clienteTelefone;
+  final String? clienteEmail;
 
   const Agendamento({
     required this.id,
@@ -21,6 +23,8 @@ class Agendamento {
     required this.valor,
     this.clienteNome,
     this.servicoNome,
+    this.clienteTelefone,
+    this.clienteEmail,
   });
 
   Map<String, dynamic> toJson() {
@@ -36,6 +40,8 @@ class Agendamento {
       'valor': valor,
       'clienteNome': clienteNome,
       'servicoNome': servicoNome,
+      if (clienteTelefone != null) 'clienteTelefone': clienteTelefone,
+      if (clienteEmail != null) 'clienteEmail': clienteEmail,
     };
   }
 
@@ -76,6 +82,8 @@ class Agendamento {
     final valor = (json['valor'] as num?)?.toDouble() ?? 0.0;
     final clienteNome = json['clienteNome'] as String?;
     final servicoNome = json['servicoNome'] as String?;
+  final clienteTelefone = json['clienteTelefone'] as String?;
+  final clienteEmail = json['clienteEmail'] as String?;
 
     return Agendamento(
       id: id,
@@ -88,6 +96,8 @@ class Agendamento {
       valor: valor,
       clienteNome: clienteNome,
       servicoNome: servicoNome,
+      clienteTelefone: clienteTelefone,
+      clienteEmail: clienteEmail,
     );
   }
 
