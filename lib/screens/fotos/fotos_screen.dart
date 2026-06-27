@@ -23,11 +23,16 @@ class _FotosScreenState extends State<FotosScreen> {
     setState(() => _carregando = true);
     try {
       final urls = await FirebaseService.listarImagensVitrine();
+      if (!mounted) return;
       setState(() {
         _fotos = urls;
       });
     } catch (e) {
       debugPrint('Erro ao carregar fotos: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao carregar fotos. Tente novamente.')),
+      );
     } finally {
       if (mounted) setState(() => _carregando = false);
     }
