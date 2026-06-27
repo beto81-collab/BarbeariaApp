@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import '../widgets/logo_corte_real.dart';
 import '../services/firebase_service.dart';
 import 'produtos_cliente_screen.dart';
+import 'fotos/fotos_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -291,25 +292,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildHomeTab() {
-    return Center(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const LogoCorteReal(size: 120),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          const LogoCorteReal(size: 100),
+          const SizedBox(height: 20),
           Text(
             'Bem-vindo à CORTE REAL!',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppTheme.primaryColor,
             ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           Text(
             'Explore nossos produtos e serviços',
-            style: Theme.of(
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: AppTheme.subTextColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          _HomeCard(
+            icon: Icons.photo_library,
+            label: 'Fotos',
+            descricao: 'Veja nosso portfólio de cortes',
+            onTap: () => Navigator.push(
               context,
-            ).textTheme.bodyLarge?.copyWith(color: AppTheme.subTextColor),
+              MaterialPageRoute(builder: (_) => const FotosScreen()),
+            ),
           ),
         ],
       ),
@@ -386,6 +400,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: const Text('Fechar'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _HomeCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String descricao;
+  final VoidCallback onTap;
+
+  const _HomeCard({
+    required this.icon,
+    required this.label,
+    required this.descricao,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          child: Row(
+            children: [
+              Icon(icon, size: 40, color: AppTheme.secondaryColor),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      descricao,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppTheme.subTextColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppTheme.subTextColor),
+            ],
+          ),
+        ),
       ),
     );
   }
